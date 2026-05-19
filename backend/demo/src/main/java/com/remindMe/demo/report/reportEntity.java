@@ -5,7 +5,7 @@ import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 import java.util.List;
 import java.util.Date;
-import com.remindMe.demo.user.userEntity;
+import com.remindMe.demo.User.userEntity;
 import com.remindMe.demo.subscription.subscriptionEntity;
 
 @Entity

@@ -1,33 +1,48 @@
 package com.remindMe.demo.subscription;
 
 import jakarta.persistence.*;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
+
 import java.util.List;
-import java.util.Date;
-import com.remindMe.demo.user.userEntity;
+import com.remindMe.demo.User.userEntity;
 import com.remindMe.demo.report.reportEntity;
 import com.remindMe.demo.notification.notificationEntity;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import java.time.LocalDate;
 
+// Kala mau liat penjelsan tentang code code yang dipakai ini, bisa liat ke userEntity.java
+@Setter
+@Getter
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
 @Table(name = "subscriptions")
 public class subscriptionEntity {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
+    @Column(nullable = false)
     private String name;
+
+    @Column(nullable = false)
     private double price;
 
-    @Temporal(TemporalType.DATE)
-    private Date dueDate;
+    @Column(nullable = false)
+    private LocalDate duDate;
 
+    @Column(nullable = false)
     private String category;
+    
+    @Column(nullable = false)
     private boolean isActive;
 
     // MANY TO MANY (user_subscriptions)
     @ManyToMany(mappedBy = "subscriptions")
-    private List<userEntity> users;
+    private List<userEntity> users; // Ini kenapa subscription bisa punya banyak user?
 
     // MANY TO MANY (report_subscriptions)
     @ManyToMany(mappedBy = "subscriptions")
