@@ -2,6 +2,7 @@ package com.remindMe.demo.subscription;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import java.util.List;
 // import java.util.List;
 
 @Service // Menandakan bahwa class ini adalah Service component di Spring Boot
@@ -21,8 +22,16 @@ public class subscriptionService{
         subscriptionRepo.save(existSub);
     }
     
-    public void getAll(String userId){
+    public List<subscriptionEntity> getAll(String userId){
+        return subscriptionRepo.findByUserId(userId);
+    }
 
+    public List<subscriptionEntity> search(String keyword){
+        return subscriptionRepo.searchByKeyword(keyword);
+    }
+
+    public List<subscriptionEntity> getByCategory(String category){
+        return subscriptionRepo.findByCategory(category);
     }
 }
 
