@@ -40,9 +40,13 @@ public class subscriptionEntity {
     @Column(nullable = false)
     private boolean isActive;
 
-    // MANY TO MANY (user_subscriptions)
-    @ManyToMany(mappedBy = "subscriptions")
-    private List<userEntity> users; // Ini kenapa subscription bisa punya banyak user?
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
+    private userEntity user;
+
+    @ManyToOne
+    @JoinColumn(name = "subscription_catalog_id")
+    private subscriptionCatalog subscriptionCatalog;
 
     // MANY TO MANY (report_subscriptions)
     @ManyToMany(mappedBy = "subscriptions")

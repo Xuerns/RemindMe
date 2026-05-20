@@ -1,10 +1,10 @@
 package com.remindMe.demo.report;
 
 import jakarta.persistence.*;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
+
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Date;
+import java.time.LocalDate;
 import com.remindMe.demo.User.userEntity;
 import com.remindMe.demo.subscription.subscriptionEntity;
 
@@ -13,13 +13,17 @@ import com.remindMe.demo.subscription.subscriptionEntity;
 public class reportEntity {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
+    @Column(nullable = false)
     private int month;
+
+    @Column(nullable = false)
     private int year;
 
-    @Temporal(TemporalType.DATE);
-    private Date generatedDate;
+    @Column(nullable = false)
+    private LocalDate generatedDate;
 
     // MANY TO ONE → user
     @ManyToOne
@@ -33,5 +37,5 @@ public class reportEntity {
         joinColumns = @JoinColumn(name = "report_id"),
         inverseJoinColumns = @JoinColumn(name = "subscription_id")
     )
-    private List<subscriptionEntity> subscriptions;
+    private List<subscriptionEntity> subscriptions = new ArrayList<>(); 
 }

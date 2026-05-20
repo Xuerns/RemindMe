@@ -1,24 +1,35 @@
 package com.remindMe.demo.notification;
 
 import jakarta.persistence.*;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
-import java.util.Date;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+import java.time.LocalDate;
 import com.remindMe.demo.User.userEntity;
 import com.remindMe.demo.subscription.subscriptionEntity;
 
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
 @Entity
 @Table(name = "notifications")
 public class notificationEntity {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
+
+    @Column(nullable = false)
     private String message;
 
-    @Temporal(TemporalType.DATE)
-    private Date scheduledDate;
+    @Column(nullable = false)
+    private LocalDate scheduledate;
 
+    @Column(nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE")
     private boolean isSent;
 
     // MANY TO ONE → user
@@ -30,4 +41,8 @@ public class notificationEntity {
     @ManyToOne
     @JoinColumn(name = "subscription_id")
     private subscriptionEntity subscription;
+
+    public void markAsSent() {
+        this.isSent = true;
+    }
 }
