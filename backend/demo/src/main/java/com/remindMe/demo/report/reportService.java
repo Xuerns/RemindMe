@@ -33,7 +33,7 @@ public class reportService {
         report.setUserId(userId);
         report.setMonth(month);
         report.setYear(year);
-        report.setGeneratedDate(LocalDate.now());
+        report.setGeneratedAt(LocalDate.now());
         report.setSubscriptions(filteredSubscriptions);
 
         return report;
@@ -52,7 +52,7 @@ public class reportService {
         report.setUserId(userId);
         report.setMonth(0); // 0 artinya laporan tahunan
         report.setYear(year);
-        report.setGeneratedDate(LocalDate.now());
+        report.setGeneratedAt(LocalDate.now());
         report.setSubscriptions(filteredSubscriptions);
 
         return report;
@@ -74,7 +74,7 @@ public class reportService {
         report.setUserId(userId);
         report.setMonth(0);
         report.setYear(LocalDate.now().getYear());
-        report.setGeneratedDate(LocalDate.now());
+        report.setGeneratedAt(LocalDate.now());
         report.setSubscriptions(activeSubscriptions);
 
         return report.getSavingsTips();
