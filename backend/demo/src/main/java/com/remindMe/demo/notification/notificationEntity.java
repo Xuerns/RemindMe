@@ -27,7 +27,7 @@ public class notificationEntity {
     private String message;
 
     @Column(nullable = false)
-    private LocalDate scheduledate;
+    private LocalDate scheduledAt;
 
     @Column(nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE")
     private boolean isSent;

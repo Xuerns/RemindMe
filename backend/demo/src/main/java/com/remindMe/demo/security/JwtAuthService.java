@@ -8,6 +8,7 @@ import com.remindMe.demo.User.userEntity;
 import com.remindMe.demo.User.userRepository;
 import com.remindMe.demo.User.dto.loginRequest;
 import com.remindMe.demo.User.dto.registerRequest;
+import com.remindMe.demo.User.regularUser;
 
 import io.jsonwebtoken.Jwts;
 
@@ -26,7 +27,17 @@ public class JwtAuthService implements AuthService {
     @Override
     public boolean register(registerRequest request) {
         // Implementasi pendaftaran pengguna baru
-        return false;
+        if (userRepository.findByEmail(request.getEmail()).isPresent()) {
+          throw new RuntimeException("Email sudah terdaftar");
+        }
+
+         regularUser newUser = new regularUser();
+         newUser.setUsername(request.getUsername());
+         newUser.setEmail(request.getEmail());
+         newUser.setPassword(passwordEncoder.encode(request.getPassword()));
+
+         userRepository.save(newUser);
+         return true;
     }
 
     @Override
