@@ -21,6 +21,11 @@ import java.time.LocalDate;
 @Table(name = "subscriptions")
 public class subscriptionEntity {
 
+    public enum statusSubs {
+        PAID,
+        UPCOMING,
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
@@ -44,9 +49,8 @@ public class subscriptionEntity {
     @JoinColumn(name = "user_id", nullable = false)
     private userEntity user;
 
-    @ManyToOne
-    @JoinColumn(name = "subscription_catalog_id")
-    private subscriptionCatalog subscriptionCatalog;
+    @Enumerated(EnumType.STRING)
+    private statusSubs status;
 
     // MANY TO MANY (report_subscriptions)
     @ManyToMany(mappedBy = "subscriptions")
