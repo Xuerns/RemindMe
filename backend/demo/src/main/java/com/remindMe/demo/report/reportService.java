@@ -33,7 +33,7 @@ public class reportService {
         report.setUserId(userId);
         report.setMonth(month);
         report.setYear(year);
-        report.setGeneratedDate(LocalDate.now());
+        report.setGeneratedAt(LocalDate.now());
         report.setSubscriptions(filteredSubscriptions);
 
         return report;
@@ -52,7 +52,7 @@ public class reportService {
         report.setUserId(userId);
         report.setMonth(0); // 0 artinya laporan tahunan
         report.setYear(year);
-        report.setGeneratedDate(LocalDate.now());
+        report.setGeneratedAt(LocalDate.now());
         report.setSubscriptions(filteredSubscriptions);
 
         return report;
@@ -64,9 +64,9 @@ public class reportService {
     }
 
     public List<String> getSavingsTips(String userId) {
-        List<subscriptionEntity> subscriptions = subscriptionRepository.findByUserId(userId);
+        List<subscriptionEntity> allSubscriptions = subscriptionRepository.findByUserId(userId);
 
-        List<subscriptionEntity> activeSubscriptions = subscriptions.stream()
+        List<subscriptionEntity> activeSubscriptions = allSubscriptions.stream()
                 .filter(subscription -> subscription.isActive())
                 .toList();
 
@@ -74,7 +74,7 @@ public class reportService {
         report.setUserId(userId);
         report.setMonth(0);
         report.setYear(LocalDate.now().getYear());
-        report.setGeneratedDate(LocalDate.now());
+        report.setGeneratedAt(LocalDate.now());
         report.setSubscriptions(activeSubscriptions);
 
         return report.getSavingsTips();
