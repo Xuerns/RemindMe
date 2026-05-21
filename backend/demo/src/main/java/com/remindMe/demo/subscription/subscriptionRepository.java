@@ -13,6 +13,6 @@ public interface subscriptionRepository extends JpaRepository<subscriptionEntity
 
     List<subscriptionEntity> findByCategory(String category);
 
-    @Query("SELECT s FROM subscriptionEntity s WHERE LOWER(s.nama) LIKE LOWER(CONCAT('%', :keyword, '%'))")
+    @Query("SELECT s FROM subscriptionEntity s WHERE LOWER(s.name) LIKE LOWER(CONCAT('%', :keyword, '%'))")
     List<subscriptionEntity> searchByKeyword(@Param("keyword") String keyword);
 }

@@ -1,0 +1,64 @@
+package com.remindMe.demo.security;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+
+import com.remindMe.demo.User.userEntity;
+import com.remindMe.demo.User.userRepository;
+import com.remindMe.demo.User.dto.loginRequest;
+import com.remindMe.demo.User.dto.registerRequest;
+
+import io.jsonwebtoken.Jwts;
+
+
+@Service
+public class JwtAuthService implements AuthService {
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private userRepository userRepository;
+
+    @Autowired
+    private JwtUtils jwtUtils;
+    
+    @Override
+    public boolean register(registerRequest request) {
+        // Implementasi pendaftaran pengguna baru
+        return false;
+    }
+
+    @Override
+    public String login(loginRequest request) {
+        // Ambil user berdasakan email, jika tidak ada maka kirim message user tidak ditemukan
+        userEntity user = userRepository.findByEmail(request.getEmail())
+            .orElseThrow(() -> new RuntimeException("User tidak ditemukan"));
+        // Cocokkan password yang dimasukkan dengan password yang disimpan di database, jika tidak cocok maka kirim message password salah
+        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            throw new RuntimeException("Password salah, silahkan coba lagi");
+        }
+
+        String token = jwtUtils.generateToken(user.getEmail());
+
+        return token;
+    }
+
+    @Override
+    public void logout() {
+
+    }
+
+    @Override
+    public boolean validateToken(String token) {
+        try {
+            Jwts.parserBuilder()
+                .setSigningKey(jwtUtils.getSigningKey())
+                .build()
+                .parseClaimsJws(token);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+}

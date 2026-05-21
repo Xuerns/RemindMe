@@ -17,6 +17,9 @@ public class premiumUser extends userEntity {
     @Column(name = "premium_date")
     private LocalDate premiumDate;
 
+    @Column(name = "premium_expiry_date")
+    private LocalDate premiumExpiryDate;
+
     @Override
     public boolean canAccessAnalytics() {
         return true; // Sesuai dengan requirement yang sudah kita buat, analytics cuman buat premium user
@@ -30,5 +33,11 @@ public class premiumUser extends userEntity {
     @Override
     public boolean canExportReport() {
         return true; // Ini fitur masih 50 / 50, kalau keburu mungkin bisa kita implementasiin
+    }
+    
+    public boolean isPremiumActive() {
+        LocalDate today = LocalDate.now();
+        boolean active = (premiumDate != null && today.isBefore(premiumExpiryDate));
+        return active;
     }
 }
