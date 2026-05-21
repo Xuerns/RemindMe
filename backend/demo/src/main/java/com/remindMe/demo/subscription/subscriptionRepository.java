@@ -6,6 +6,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface subscriptionRepository extends JpaRepository<subscriptionEntity, String> {
@@ -15,4 +16,6 @@ public interface subscriptionRepository extends JpaRepository<subscriptionEntity
 
     @Query("SELECT s FROM subscriptionEntity s WHERE LOWER(s.name) LIKE LOWER(CONCAT('%', :keyword, '%'))")
     List<subscriptionEntity> searchByKeyword(@Param("keyword") String keyword);
+
+    Optional<subscriptionEntity> findByName(String name); //Optional Agar aplikasi tidak langsung crash jika data tidak ditemukan
 }
