@@ -32,6 +32,7 @@ public class reportEntity {
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
+    // Sesuai class diagram: Report punya userId
     @Transient
     private String userId;
 
@@ -41,14 +42,17 @@ public class reportEntity {
     @Column(nullable = false)
     private int year;
 
+    // Sesuai class diagram: generatedAt
     @Column(nullable = false)
-    private LocalDate generatedDate;
+    private LocalDate generatedAt;
 
+    // Relasi ke user tetap dipertahankan untuk kebutuhan database
     @ManyToOne
     @JoinColumn(name = "user_id")
     @JsonIgnore
     private userEntity user;
 
+    // Report mengumpulkan banyak subscription
     @ManyToMany
     @JoinTable(
             name = "report_subscriptions",

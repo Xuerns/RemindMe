@@ -20,43 +20,40 @@ public class reportService {
     }
 
     public reportEntity getMonthlyReport(String userId, int month, int year) {
-        LocalDate startDate = LocalDate.of(year, month, 1);
-        LocalDate endDate = startDate.withDayOfMonth(startDate.lengthOfMonth());
+        List<subscriptionEntity> allSubscriptions = subscriptionRepository.findByUserId(userId);
 
-        List<subscriptionEntity> subscriptions =
-                subscriptionRepository.findByUser_IdAndDuDateBetweenAndIsActiveTrue(
-                        userId,
-                        startDate,
-                        endDate
-                );
+        List<subscriptionEntity> filteredSubscriptions = allSubscriptions.stream()
+                .filter(subscription -> subscription.isActive())
+                .filter(subscription -> subscription.getDuDate() != null)
+                .filter(subscription -> subscription.getDuDate().getMonthValue() == month)
+                .filter(subscription -> subscription.getDuDate().getYear() == year)
+                .toList();
 
         reportEntity report = new reportEntity();
         report.setUserId(userId);
         report.setMonth(month);
         report.setYear(year);
         report.setGeneratedDate(LocalDate.now());
-        report.setSubscriptions(subscriptions);
+        report.setSubscriptions(filteredSubscriptions);
 
         return report;
     }
 
     public reportEntity getYearlyReport(String userId, int year) {
-        LocalDate startDate = LocalDate.of(year, 1, 1);
-        LocalDate endDate = LocalDate.of(year, 12, 31);
+        List<subscriptionEntity> allSubscriptions = subscriptionRepository.findByUserId(userId);
 
-        List<subscriptionEntity> subscriptions =
-                subscriptionRepository.findByUser_IdAndDuDateBetweenAndIsActiveTrue(
-                        userId,
-                        startDate,
-                        endDate
-                );
+        List<subscriptionEntity> filteredSubscriptions = allSubscriptions.stream()
+                .filter(subscription -> subscription.isActive())
+                .filter(subscription -> subscription.getDuDate() != null)
+                .filter(subscription -> subscription.getDuDate().getYear() == year)
+                .toList();
 
         reportEntity report = new reportEntity();
         report.setUserId(userId);
         report.setMonth(0); // 0 artinya laporan tahunan
         report.setYear(year);
         report.setGeneratedDate(LocalDate.now());
-        report.setSubscriptions(subscriptions);
+        report.setSubscriptions(filteredSubscriptions);
 
         return report;
     }
@@ -67,15 +64,18 @@ public class reportService {
     }
 
     public List<String> getSavingsTips(String userId) {
-        List<subscriptionEntity> subscriptions =
-                subscriptionRepository.findByUser_IdAndIsActiveTrue(userId);
+        List<subscriptionEntity> subscriptions = subscriptionRepository.findByUserId(userId);
+
+        List<subscriptionEntity> activeSubscriptions = subscriptions.stream()
+                .filter(subscription -> subscription.isActive())
+                .toList();
 
         reportEntity report = new reportEntity();
         report.setUserId(userId);
         report.setMonth(0);
         report.setYear(LocalDate.now().getYear());
         report.setGeneratedDate(LocalDate.now());
-        report.setSubscriptions(subscriptions);
+        report.setSubscriptions(activeSubscriptions);
 
         return report.getSavingsTips();
     }
