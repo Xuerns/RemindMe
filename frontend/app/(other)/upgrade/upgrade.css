@@ -1,0 +1,373 @@
+.upgrade-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.35;
+  pointer-events: none;
+  will-change: transform;
+}
+
+.upgrade-orb--primary {
+  width: 420px;
+  height: 420px;
+  background: var(--color-primary-container);
+  top: -60px;
+  right: -120px;
+  animation: upgrade-orb-drift-1 18s ease-in-out infinite alternate;
+}
+
+.upgrade-orb--secondary {
+  width: 340px;
+  height: 340px;
+  background: var(--color-secondary-container);
+  bottom: -80px;
+  left: -100px;
+  animation: upgrade-orb-drift-2 22s ease-in-out infinite alternate;
+}
+
+.upgrade-orb--tertiary {
+  width: 260px;
+  height: 260px;
+  background: var(--color-tertiary-container);
+  top: 40%;
+  left: 50%;
+  animation: upgrade-orb-drift-3 15s ease-in-out infinite alternate;
+}
+
+@keyframes upgrade-orb-drift-1 {
+  0% { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(-40px, 30px) scale(1.08); }
+}
+
+@keyframes upgrade-orb-drift-2 {
+  0% { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(30px, -20px) scale(1.05); }
+}
+
+@keyframes upgrade-orb-drift-3 {
+  0% { transform: translate(-50%, -50%) scale(1); }
+  100% { transform: translate(calc(-50% + 25px), calc(-50% - 35px)) scale(1.1); }
+}
+
+/* ── Card entrance stagger ── */
+.upgrade-card-enter {
+  opacity: 0;
+  transform: translateY(24px);
+  animation: upgrade-card-rise 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.upgrade-card-enter:nth-child(2) {
+  animation-delay: 0.12s;
+}
+
+@keyframes upgrade-card-rise {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ── Premium card shimmer ── */
+.upgrade-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.upgrade-shimmer::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(
+    105deg,
+    transparent 20%,
+    rgba(255, 255, 255, 0.12) 40%,
+    rgba(255, 255, 255, 0.25) 50%,
+    rgba(255, 255, 255, 0.12) 60%,
+    transparent 80%
+  );
+  animation: upgrade-shimmer-sweep 4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  pointer-events: none;
+  z-index: 1;
+}
+
+@keyframes upgrade-shimmer-sweep {
+  0% { left: -100%; }
+  40%, 100% { left: 200%; }
+}
+
+/* ── Badge pulse ── */
+.upgrade-badge-pulse {
+  animation: upgrade-pulse-ring 2.5s ease-in-out infinite;
+}
+
+@keyframes upgrade-pulse-ring {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(101, 91, 104, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(101, 91, 104, 0);
+  }
+}
+
+/* ── Popup overlay + panel ── */
+.upgrade-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.upgrade-overlay-bg {
+  position: absolute;
+  inset: 0;
+  background: rgba(13, 28, 46, 0.4);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.upgrade-overlay-bg--enter {
+  animation: upgrade-overlay-fadein 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.upgrade-overlay-bg--exit {
+  animation: upgrade-overlay-fadeout 0.25s ease forwards;
+}
+
+@keyframes upgrade-overlay-fadein {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes upgrade-overlay-fadeout {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+.upgrade-panel {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 520px;
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+  background: var(--color-surface-container-lowest);
+  border-radius: 24px;
+  box-shadow:
+    0 24px 80px -12px rgba(0, 0, 0, 0.14),
+    0 0 0 1px rgba(255, 255, 255, 0.6) inset;
+}
+
+.upgrade-panel--enter {
+  animation: upgrade-panel-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.upgrade-panel--exit {
+  animation: upgrade-panel-out 0.25s ease forwards;
+}
+
+@keyframes upgrade-panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes upgrade-panel-out {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+}
+
+/* ── Step transitions ── */
+.upgrade-step-enter {
+  animation: upgrade-step-slide-in 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes upgrade-step-slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* ── Progress bar fill ── */
+.upgrade-progress-fill {
+  transition: width 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ── Feature check mark ── */
+.upgrade-check-enter {
+  opacity: 0;
+  transform: scale(0);
+  animation: upgrade-check-pop 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes upgrade-check-pop {
+  0% { opacity: 0; transform: scale(0); }
+  60% { transform: scale(1.15); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+/* ── Success confetti burst ── */
+.upgrade-confetti-piece {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  animation: upgrade-confetti-fall 1.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: transform, opacity;
+}
+
+@keyframes upgrade-confetti-fall {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) rotate(0deg) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--confetti-x), var(--confetti-y)) rotate(var(--confetti-r)) scale(0.5);
+  }
+}
+
+/* ── Success checkmark circle ── */
+.upgrade-success-ring {
+  stroke-dasharray: 180;
+  stroke-dashoffset: 180;
+  animation: upgrade-ring-draw 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.2s forwards;
+}
+
+.upgrade-success-check {
+  stroke-dasharray: 40;
+  stroke-dashoffset: 40;
+  animation: upgrade-check-draw 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.7s forwards;
+}
+
+@keyframes upgrade-ring-draw {
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes upgrade-check-draw {
+  to { stroke-dashoffset: 0; }
+}
+
+/* ── Button press feedback ── */
+.upgrade-btn-press {
+  transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.15s ease;
+}
+
+.upgrade-btn-press:active {
+  transform: scale(0.97);
+}
+
+/* ── Payment method tile ── */
+.upgrade-method-tile {
+  transition: border-color 0.2s ease,
+              background-color 0.2s ease,
+              box-shadow 0.2s ease;
+  cursor: pointer;
+}
+
+.upgrade-method-tile:hover {
+  box-shadow: 0 4px 16px -4px rgba(0, 0, 0, 0.06);
+}
+
+.upgrade-method-tile--active {
+  border-color: var(--color-secondary) !important;
+  background: var(--color-secondary-container);
+  box-shadow: 0 0 0 3px rgba(101, 91, 104, 0.12);
+}
+
+/* ── Input focus ring ── */
+.upgrade-input {
+  transition: border-color 0.2s ease,
+              box-shadow 0.2s ease;
+}
+
+.upgrade-input:focus {
+  outline: none;
+  border-color: var(--color-secondary);
+  box-shadow: 0 0 0 3px rgba(101, 91, 104, 0.1);
+}
+
+/* ── Heading text entrance ── */
+.upgrade-heading-enter {
+  opacity: 0;
+  transform: translateY(12px);
+  animation: upgrade-heading-rise 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes upgrade-heading-rise {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ── Scrollbar inside popup ── */
+.upgrade-panel::-webkit-scrollbar { width: 4px; }
+.upgrade-panel::-webkit-scrollbar-track { background: transparent; }
+.upgrade-panel::-webkit-scrollbar-thumb {
+  background: var(--color-outline-variant);
+  border-radius: 10px;
+}
+.upgrade-panel {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-outline-variant) transparent;
+}
+
+/* ── Stagger delays for feature list items ── */
+.upgrade-feature-item:nth-child(1) .upgrade-check-enter { animation-delay: 0.05s; }
+.upgrade-feature-item:nth-child(2) .upgrade-check-enter { animation-delay: 0.1s; }
+.upgrade-feature-item:nth-child(3) .upgrade-check-enter { animation-delay: 0.15s; }
+.upgrade-feature-item:nth-child(4) .upgrade-check-enter { animation-delay: 0.2s; }
+.upgrade-feature-item:nth-child(5) .upgrade-check-enter { animation-delay: 0.25s; }
+
+/* ── Processing spinner ── */
+.upgrade-spinner {
+  width: 20px;
+  height: 20px;
+  border: 2.5px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: upgrade-spin 0.7s linear infinite;
+}
+
+@keyframes upgrade-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Back button hover ── */
+.upgrade-back-btn {
+  transition: background-color 0.2s ease,
+              color 0.2s ease,
+              transform 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.upgrade-back-btn:hover {
+  background: var(--color-surface-container);
+  color: var(--color-on-surface);
+}
+
+.upgrade-back-btn:active {
+  transform: scale(0.96);
+}

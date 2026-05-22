@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   User,
   Shield,
@@ -17,6 +17,8 @@ import {
   Camera,
   AlertTriangle,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { checkToken } from "@/helper/checkToken";
 
 const activityItems = [
   {
@@ -83,6 +85,14 @@ export default function ProfilePage() {
   const [emailNotif, setEmailNotif] = useState(true);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!checkToken()) {
+      router.push("/");
+    }
+  }, []);
+
   return (
     <div className="flex-1 bg-slate-50 min-h-screen">
       {/* Top bar */}
@@ -101,7 +111,9 @@ export default function ProfilePage() {
             alt="Alex Rivera"
             className="w-8 h-8 rounded-full object-cover ring-2 ring-violet-200"
           />
-          <span className="text-sm font-semibold text-slate-700">Alex Rivera</span>
+          <span className="text-sm font-semibold text-slate-700">
+            Alex Rivera
+          </span>
         </div>
       </header>
 
@@ -111,10 +123,12 @@ export default function ProfilePage() {
         <div className="flex flex-col gap-5">
           {/* Page title */}
           <div>
-            <h1 className="text-2xl font-bold text-slate-800 tracking-tight">My Profile</h1>
+            <h1 className="text-2xl font-bold text-slate-800 tracking-tight">
+              My Profile
+            </h1>
             <p className="text-sm text-slate-500 mt-1">
-              Manage your account information, security settings, and view your recent activity
-              within the RemindMe ecosystem.
+              Manage your account information, security settings, and view your
+              recent activity within the RemindMe ecosystem.
             </p>
           </div>
 
@@ -202,13 +216,19 @@ export default function ProfilePage() {
               </h2>
             </div>
             <div className="grid grid-cols-3 gap-4">
-              <PasswordInput label="Current Password" placeholder="••••••••••" />
+              <PasswordInput
+                label="Current Password"
+                placeholder="••••••••••"
+              />
               <PasswordInput label="New Password" placeholder="••••••••••" />
               <PasswordInput label="Confirm Password" placeholder="••••••••" />
             </div>
             <p className="text-xs text-slate-400 mt-3 flex items-center gap-1.5">
-              <span className="w-3.5 h-3.5 rounded-full border border-slate-300 flex items-center justify-center text-[9px] font-bold text-slate-400">i</span>
-              Password must be at least 12 characters and include a special character.
+              <span className="w-3.5 h-3.5 rounded-full border border-slate-300 flex items-center justify-center text-[9px] font-bold text-slate-400">
+                i
+              </span>
+              Password must be at least 12 characters and include a special
+              character.
             </p>
           </section>
 
@@ -225,7 +245,9 @@ export default function ProfilePage() {
               {/* Email Notifications */}
               <div className="flex items-center justify-between py-3 border-b border-slate-100">
                 <div>
-                  <p className="text-sm font-semibold text-slate-700">Email Notifications</p>
+                  <p className="text-sm font-semibold text-slate-700">
+                    Email Notifications
+                  </p>
                   <p className="text-xs text-slate-400 mt-0.5">
                     Receive weekly summaries of your subscriptions
                   </p>
@@ -247,7 +269,9 @@ export default function ProfilePage() {
               {/* Two-Factor */}
               <div className="flex items-center justify-between py-3">
                 <div>
-                  <p className="text-sm font-semibold text-slate-700">Two-Factor Authentication</p>
+                  <p className="text-sm font-semibold text-slate-700">
+                    Two-Factor Authentication
+                  </p>
                   <p className="text-xs text-slate-400 mt-0.5">
                     Add an extra layer of security to your account
                   </p>
@@ -273,13 +297,18 @@ export default function ProfilePage() {
                   <div
                     className={`w-8 h-8 rounded-lg ${item.iconBg} flex items-center justify-center flex-shrink-0 mt-0.5`}
                   >
-                    <item.icon className={`w-3.5 h-3.5 ${item.iconColor}`} strokeWidth={2} />
+                    <item.icon
+                      className={`w-3.5 h-3.5 ${item.iconColor}`}
+                      strokeWidth={2}
+                    />
                   </div>
                   <div>
                     <p className="text-xs font-semibold text-slate-700 leading-snug">
                       {item.title}
                     </p>
-                    <p className="text-[11px] text-slate-400 mt-0.5">{item.meta}</p>
+                    <p className="text-[11px] text-slate-400 mt-0.5">
+                      {item.meta}
+                    </p>
                   </div>
                 </div>
               ))}
@@ -298,8 +327,9 @@ export default function ProfilePage() {
               </h2>
             </div>
             <p className="text-xs text-slate-500 mb-4 leading-relaxed">
-              Once you delete your account, there is no going back. Please be certain. All
-              subscription tracking and history will be permanently erased.
+              Once you delete your account, there is no going back. Please be
+              certain. All subscription tracking and history will be permanently
+              erased.
             </p>
             <button
               onClick={() => setShowDeleteModal(true)}
@@ -332,10 +362,13 @@ export default function ProfilePage() {
               <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center">
                 <AlertTriangle className="w-5 h-5 text-red-500" />
               </div>
-              <h3 className="text-base font-bold text-slate-800">Delete Account</h3>
+              <h3 className="text-base font-bold text-slate-800">
+                Delete Account
+              </h3>
             </div>
             <p className="text-sm text-slate-500 mb-5">
-              This action is permanent and cannot be undone. All your data will be erased.
+              This action is permanent and cannot be undone. All your data will
+              be erased.
             </p>
             <div className="flex gap-3">
               <button

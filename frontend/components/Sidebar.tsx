@@ -1,5 +1,6 @@
 "use client";
- 
+
+import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -11,76 +12,307 @@ import {
   User,
   Settings,
   LogOut,
+  ChevronRight,
+  X,
+  Menu,
 } from "lucide-react";
- 
+
+/* ══════════════════════════════════════════
+   Navigation Config
+   ══════════════════════════════════════════ */
 const navItems = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "Subscriptions", href: "/subscriptions", icon: CreditCard },
-  { label: "Calendar", href: "/calendar", icon: Calendar },
   { label: "Notifications", href: "/notifications", icon: Bell },
   { label: "Analytics", href: "/analytics", icon: BarChart3 },
   { label: "Profile", href: "/profile", icon: User },
   { label: "Settings", href: "/settings", icon: Settings },
 ];
- 
+
+const MOBILE_BP = 768;
+const TABLET_BP = 1024;
+
 export default function Sidebar() {
   const pathname = usePathname();
- 
+
+  const [isOpen, setIsOpen] = useState(true);
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  const sidebarRef = useRef<HTMLElement>(null);
+
+  /* ── Responsive ── */
+  useEffect(() => {
+    setMounted(true);
+    const check = () => {
+      const w = window.innerWidth;
+      const mobile = w < MOBILE_BP;
+      setIsMobile(mobile);
+      if (w >= MOBILE_BP && w < TABLET_BP) setIsOpen(false);
+      if (!mobile) setIsMobileOpen(false);
+    };
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
+
+  /* ── Close mobile on navigate ── */
+  useEffect(() => {
+    if (isMobile) setIsMobileOpen(false);
+  }, [pathname, isMobile]);
+
+  /* ── Outside click ── */
+  useEffect(() => {
+    if (!isMobileOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (sidebarRef.current && !sidebarRef.current.contains(e.target as Node))
+        setIsMobileOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [isMobileOpen]);
+
+  /* ── Escape key ── */
+  useEffect(() => {
+    if (!isMobileOpen) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setIsMobileOpen(false);
+    };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, [isMobileOpen]);
+
+  /* ── Body scroll lock ── */
+  useEffect(() => {
+    document.body.style.overflow = isMobileOpen ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
+  }, [isMobileOpen]);
+
+  const toggle = useCallback(() => {
+    if (isMobile) {
+      setIsMobileOpen((o) => !o);
+    } else {
+      setIsOpen((o) => !o);
+    }
+  }, [isMobile]);
+
+  const toggleLogout = async () => {
+    await fetch("/api/logout", { method: "POST" });
+    window.location.href = "/";
+  };
+
+  if (!mounted) return null;
+
+  const expanded = isMobile ? true : isOpen;
+  const sidebarW = expanded ? "w-[260px]" : "w-[72px]";
+
   return (
-    <aside className="w-[220px] min-h-screen bg-white border-r border-slate-100 flex flex-col shadow-sm">
-      {/* Brand */}
-      <div className="px-6 pt-7 pb-6 border-b border-slate-100">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-violet-600 flex items-center justify-center shadow-md shadow-violet-200">
-            <Bell className="w-4 h-4 text-white" strokeWidth={2.5} />
-          </div>
-          <div>
-            <p className="text-[15px] font-bold text-slate-800 leading-tight tracking-tight">
-              RemindMe
+    <>
+      {/* ══════ Mobile hamburger ══════ */}
+      {isMobile && !isMobileOpen && (
+        <button
+          id="sidebar-mobile-toggle"
+          onClick={toggle}
+          className="fixed top-4 left-4 z-[60]
+                     w-10 h-10 rounded-xl
+                     bg-white border border-gray-200
+                     flex items-center justify-center
+                     text-on-surface-variant shadow-sm
+                     transition-all duration-200
+                     hover:scale-105 active:scale-95"
+          aria-label="Open navigation"
+        >
+          <Menu size={18} strokeWidth={2} />
+        </button>
+      )}
+
+      {/* ══════ Mobile backdrop ══════ */}
+      {isMobile && (
+        <div
+          onClick={() => setIsMobileOpen(false)}
+          className={`fixed inset-0 z-[70] bg-black/40
+                      transition-opacity duration-300
+                      ${isMobileOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}
+        />
+      )}
+
+      {/* ══════════════════════════════════════════
+          SIDEBAR
+         ══════════════════════════════════════════ */}
+      <aside
+        ref={sidebarRef}
+        id="sidebar-nav"
+        className={`
+          ${isMobile
+            ? `fixed top-0 left-0 z-[80] h-full w-[280px]
+               transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]
+               ${isMobileOpen ? "translate-x-0" : "-translate-x-full"}`
+            : `sticky top-0 h-screen ${sidebarW}
+               transition-[width] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]`
+          }
+          flex flex-col shrink-0 overflow-hidden
+          bg-white border-r border-gray-100
+        `}
+      >
+        {/* ══════ Header / Logo ══════ */}
+        <div className={`
+          flex items-center justify-between shrink-0
+          border-b border-gray-100
+          ${expanded ? "px-4 py-4" : "px-0 justify-center py-4"}
+          transition-all duration-300
+        `}>
+          {/* Logo + brand — HIDDEN when collapsed */}
+          {expanded && (
+            <div className="flex items-center gap-2.5 sb-fade-text">
+              {/* Logo icon */}
+              <div className="sb-logo-icon relative w-9 h-9 rounded-xl
+                              flex items-center justify-center shrink-0
+                              shadow-md">
+                <Bell className="w-[18px] h-[18px] text-white relative z-10" strokeWidth={2.5} />
+              </div>
+
+              {/* Brand text */}
+              <div className="overflow-hidden">
+                <p className="text-[15px] font-bold text-on-surface leading-tight tracking-tight whitespace-nowrap m-0">
+                  RemindMe
+                </p>
+                <p className="text-[10px] text-on-surface-variant font-medium tracking-widest uppercase whitespace-nowrap mt-0.5 m-0">
+                  Subscription Tracker
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Toggle / Close button */}
+          {isMobile && isMobileOpen ? (
+            <button
+              onClick={toggle}
+              className="shrink-0 w-8 h-8 rounded-lg
+                         flex items-center justify-center
+                         text-gray-400 hover:text-on-surface hover:bg-gray-50
+                         transition-all duration-200 active:scale-90"
+              aria-label="Close menu"
+            >
+              <X size={16} strokeWidth={2} />
+            </button>
+          ) : !isMobile ? (
+            <button
+              id="sidebar-collapse-toggle"
+              onClick={toggle}
+              className={`shrink-0 w-8 h-8 rounded-lg
+                         flex items-center justify-center
+                         text-gray-400 hover:text-on-surface hover:bg-gray-50
+                         border border-gray-200
+                         transition-all duration-200
+                         ${!expanded ? "mx-auto" : ""}`}
+              title={isOpen ? "Collapse sidebar" : "Expand sidebar"}
+            >
+              <ChevronRight
+                size={14}
+                strokeWidth={2}
+                className={`transition-transform duration-300 ${isOpen ? "rotate-180" : ""}`}
+              />
+            </button>
+          ) : null}
+        </div>
+
+        {/* ══════ Navigation ══════ */}
+        <nav className={`
+          flex-1 overflow-y-auto overflow-x-hidden sb-scrollbar py-3
+          ${expanded ? "px-2.5" : "px-2"}
+        `}>
+          {/* Section label */}
+          {expanded && (
+            <p className="sb-fade-text text-[9px] font-bold tracking-[2.5px] text-gray-300
+                          uppercase px-2.5 pb-2.5 m-0">
+              Menu Utama
             </p>
-            <p className="text-[10px] text-slate-400 font-medium tracking-wide uppercase">
-              Manage Subscriptions
+          )}
+
+          {navItems.map(({ label, href, icon: Icon }) => {
+            const active = pathname === href;
+            return (
+              <div key={href} className="sb-tooltip-wrap">
+                <Link
+                  href={href}
+                  id={`nav-${label.toLowerCase()}`}
+                  className={`
+                    sb-menu-item flex items-center gap-3 rounded-xl
+                    text-[13px] font-medium relative mb-0.5
+                    transition-all duration-200
+                    ${expanded ? "px-3 py-2.5" : "px-0 py-2.5 justify-center"}
+                    ${active
+                      ? "sb-active-link text-white shadow-sm"
+                      : "text-gray-500 hover:bg-gray-50 hover:text-gray-800"
+                    }
+                  `}
+                >
+                  {/* Active gradient bar */}
+                  {active && (
+                    <span className="absolute left-0 top-1/2 -translate-y-1/2
+                                     w-[3px] h-5 rounded-r-full bg-white/80 sb-active-bar" />
+                  )}
+
+                  <span className="shrink-0 w-[18px] flex items-center justify-center">
+                    <Icon
+                      className={`w-[18px] h-[18px] transition-all duration-200
+                        ${active ? "text-white" : "text-gray-400"}`}
+                      strokeWidth={active ? 2.2 : 1.8}
+                    />
+                  </span>
+
+                  {expanded && (
+                    <span className="sb-fade-text flex-1 whitespace-nowrap overflow-hidden">
+                      {label}
+                    </span>
+                  )}
+
+                  {active && expanded && (
+                    <span className="w-1.5 h-1.5 rounded-full bg-white sb-active-dot" />
+                  )}
+                </Link>
+
+                {/* Tooltip (collapsed only) */}
+                {!expanded && <span className="sb-tooltip">{label}</span>}
+              </div>
+            );
+          })}
+        </nav>
+
+        {/* ══════ Footer ══════ */}
+        <div className={`border-t border-gray-100 shrink-0
+                         ${expanded ? "px-2.5 pt-2 pb-4" : "px-2 pt-2 pb-4"}`}>
+          {expanded && (
+            <p className="sb-fade-text text-[10px] text-gray-300 px-3 pb-2 whitespace-nowrap m-0">
+              RemindMe · v1.0.0
             </p>
+          )}
+
+          <div className="sb-tooltip-wrap">
+            <button
+              id="sidebar-logout-btn"
+              onClick={toggleLogout}
+              className={`
+                w-full flex items-center gap-3 rounded-xl
+                text-[13px] font-medium
+                text-gray-400 border border-transparent
+                transition-all duration-200
+                hover:bg-red-50 hover:text-red-500 hover:border-red-100
+                ${expanded ? "px-3 py-2.5" : "px-0 py-2.5 justify-center"}
+              `}
+            >
+              <span className="shrink-0 w-[18px] flex items-center justify-center">
+                <LogOut size={16} strokeWidth={1.8} />
+              </span>
+              {expanded && (
+                <span className="sb-fade-text whitespace-nowrap">Keluar</span>
+              )}
+            </button>
+            {!expanded && <span className="sb-tooltip">Keluar</span>}
           </div>
         </div>
-      </div>
- 
-      {/* Navigation */}
-      <nav className="flex-1 px-3 py-4 space-y-0.5">
-        {navItems.map(({ label, href, icon: Icon }) => {
-          const isActive = pathname === href;
-          return (
-            <Link
-              key={href}
-              href={href}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 group
-                ${
-                  isActive
-                    ? "bg-violet-50 text-violet-700"
-                    : "text-slate-500 hover:bg-slate-50 hover:text-slate-800"
-                }`}
-            >
-              <Icon
-                className={`w-4 h-4 flex-shrink-0 transition-colors
-                  ${isActive ? "text-violet-600" : "text-slate-400 group-hover:text-slate-600"}`}
-                strokeWidth={isActive ? 2.5 : 2}
-              />
-              {label}
-              {isActive && (
-                <span className="ml-auto w-1.5 h-1.5 rounded-full bg-violet-500" />
-              )}
-            </Link>
-          );
-        })}
-      </nav>
- 
-      {/* Logout */}
-      <div className="px-3 pb-6 border-t border-slate-100 pt-3">
-        <button className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all duration-150 w-full group">
-          <LogOut className="w-4 h-4 group-hover:text-red-500 transition-colors" strokeWidth={2} />
-          Logout
-        </button>
-      </div>
-    </aside>
+      </aside>
+    </>
   );
 }

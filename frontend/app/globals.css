@@ -235,3 +235,181 @@ body {
   padding: 0;
   min-height: 100vh;
 }
+
+/* ══════════════════════════════════════════════
+   SIDEBAR – White Background + Colorful Active
+   ══════════════════════════════════════════════ */
+
+/* ── Logo icon gradient ── */
+.sb-logo-icon {
+  background: linear-gradient(
+    135deg,
+    var(--color-primary) 0%,
+    var(--color-secondary) 60%,
+    var(--color-tertiary) 100%
+  );
+  box-shadow: 0 4px 14px -2px rgba(82, 96, 105, 0.35);
+}
+
+/* ── Active link — colorful gradient (like login right panel) ── */
+.sb-active-link {
+  background: linear-gradient(
+    135deg,
+    var(--color-primary) 0%,
+    #455a64 30%,
+    var(--color-secondary) 65%,
+    var(--color-tertiary) 100%
+  );
+  background-size: 200% 200%;
+  animation: sb-gradient-shift 6s ease-in-out infinite;
+  box-shadow:
+    0 4px 16px -2px rgba(82, 96, 105, 0.3),
+    0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+@keyframes sb-gradient-shift {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+/* ── Fade text animation ── */
+.sb-fade-text {
+  animation: sb-text-enter 0.28s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes sb-text-enter {
+  0% {
+    opacity: 0;
+    transform: translateX(-6px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* ── Nav item base ── */
+.sb-menu-item {
+  position: relative;
+  overflow: visible;
+  cursor: pointer;
+}
+
+/* Soft radial glow on hover (non-active items) */
+.sb-menu-item:not(.sb-active-link)::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 12px;
+  opacity: 0;
+  background: radial-gradient(
+    ellipse at 30% 50%,
+    var(--color-surface-container-high) 0%,
+    transparent 70%
+  );
+  transition: opacity 0.25s ease;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.sb-menu-item:not(.sb-active-link):hover::after {
+  opacity: 0.7;
+}
+
+/* ── Active bar pop-in ── */
+.sb-active-bar {
+  animation: sb-bar-pop 0.35s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes sb-bar-pop {
+  0% {
+    height: 0;
+    opacity: 0;
+  }
+  100% {
+    height: 20px;
+    opacity: 1;
+  }
+}
+
+/* ── Active dot pulse ── */
+.sb-active-dot {
+  animation: sb-dot-pulse 2.5s ease-in-out infinite;
+}
+
+@keyframes sb-dot-pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.45;
+    transform: scale(0.75);
+  }
+}
+
+/* ── Tooltip (collapsed state) ── */
+.sb-tooltip-wrap {
+  position: relative;
+}
+
+.sb-tooltip {
+  position: absolute;
+  left: calc(100% + 14px);
+  top: 50%;
+  transform: translateY(-50%) scale(0.92);
+  padding: 6px 14px;
+  border-radius: 10px;
+  background: var(--color-inverse-surface);
+  color: var(--color-inverse-on-surface);
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition:
+    opacity 0.18s ease,
+    transform 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+  z-index: 200;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
+}
+
+.sb-tooltip::before {
+  content: "";
+  position: absolute;
+  right: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  border: 5px solid transparent;
+  border-right-color: var(--color-inverse-surface);
+}
+
+.sb-tooltip-wrap:hover > .sb-tooltip {
+  opacity: 1;
+  transform: translateY(-50%) scale(1);
+}
+
+/* ── Scrollbar ── */
+.sb-scrollbar::-webkit-scrollbar {
+  width: 3px;
+}
+.sb-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.sb-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--color-outline-variant);
+  border-radius: 10px;
+}
+.sb-scrollbar:hover::-webkit-scrollbar-thumb {
+  background: var(--color-outline);
+}
+.sb-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-outline-variant) transparent;
+}
+
+

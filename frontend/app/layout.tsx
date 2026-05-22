@@ -9,9 +9,9 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "RemindMe — Login",
+  title: "RemindMe — Productivity Companion",
   description:
-    "Sign in to RemindMe, your serene productivity companion. Manage reminders with calm and clarity.",
+    "RemindMe, your serene productivity companion. Manage reminders with calm and clarity.",
 };
 
 export default function RootLayout({

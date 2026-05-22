@@ -193,7 +193,7 @@ export default function LoginPage() {
       setIsSubmitting(true);
       
       try {
-        const res = await fetch("/api/auth/login", {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email, password }),
@@ -209,7 +209,7 @@ export default function LoginPage() {
 
         router.push("/dashboard");
       } catch (err) {
-        alert("Terjadi kesalahan saat masuk. Silakan coba lagi.");
+        alert("login gagal");
       } finally {
         setIsSubmitting(false);
       } 
