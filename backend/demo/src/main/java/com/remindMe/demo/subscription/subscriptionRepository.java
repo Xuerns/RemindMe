@@ -14,8 +14,18 @@ public interface subscriptionRepository extends JpaRepository<subscriptionEntity
 
     List<subscriptionEntity> findByCategory(String category);
 
+    @Query("SELECT s FROM subscriptionEntity s WHERE s.user.id = :userId ORDER BY s.price DESC")
+    List<subscriptionEntity> findTop3ByUserIdOrderByPriceDesc(@Param("userId") String userId, Pageable pageable);
+
+    @Query("SELECT COALESCE(SUM(s.price), 0) FROM subscriptionEntity s WHERE s.user.id = :userId")
+    Double getTotalMonthlyByUserId(@Param("userId") String userId);
+
+    @Query("SELECT COUNT(s) FROM subscriptionEntity s WHERE s.user.id = :userId")
+    Long countByUserId(@Param("userId") String userId);
+
     @Query("SELECT s FROM subscriptionEntity s WHERE LOWER(s.name) LIKE LOWER(CONCAT('%', :keyword, '%'))")
     List<subscriptionEntity> searchByKeyword(@Param("keyword") String keyword);
 
-    Optional<subscriptionEntity> findByName(String name); //Optional Agar aplikasi tidak langsung crash jika data tidak ditemukan
+    Optional<subscriptionEntity> findByName(String name); // Optional Agar aplikasi tidak langsung crash jika data tidak
+                                                          // ditemukan
 }

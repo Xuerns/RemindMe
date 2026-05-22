@@ -36,16 +36,37 @@ public class subscriptionController {
         return ResponseEntity.ok(results);
     }
 
-    @PostMapping("/add")
-    public subscriptionEntity addSubscription(@RequestBody subscriptionEntity subscription){
+    @GetMapping("/user/{userId}/top3")
+    public ResponseEntity<List<subscriptionEntity>> getTop3(@PathVariable String userId) {
+        return ResponseEntity.ok(subscriptionService.getTop3ByPrice(userId));
+    }
 
-        return subscriptionService.addSubscription(subscription); //memasukkan isi dari subscription ke method add di service
+    @GetMapping("/user/{userId}/total-monthly")
+    public ResponseEntity<Double> getTotalMonthly(@PathVariable String userId) {
+        return ResponseEntity.ok(subscriptionService.getTotalMonthly(userId));
+    }
+
+    @GetMapping("/user/{userId}/count")
+    public ResponseEntity<Long> countSubscriptions(@PathVariable String userId) {
+        return ResponseEntity.ok(subscriptionService.countSubscriptions(userId));
+    }
+
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<String> updateStatus(@PathVariable String id, @RequestParam String status) {
+        subscriptionService.updateStatus(id, status);
+        return ResponseEntity.ok("Status berhasil diupdate!");
+    }
+
+    @PostMapping("/add")
+    public subscriptionEntity addSubscription(@RequestBody subscriptionEntity subscription) {
+
+        return subscriptionService.addSubscription(subscription); // memasukkan isi dari subscription ke method add di
+                                                                  // service
     }
 
     @DeleteMapping("/delete/{name}")
-    public String deleteSubscription(@PathVariable String name){
+    public String deleteSubscription(@PathVariable String name) {
         return subscriptionService.deleteSubscription(name);
     }
-  
 
 }
