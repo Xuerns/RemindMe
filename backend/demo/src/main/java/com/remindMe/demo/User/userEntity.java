@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import com.remindMe.demo.subscription.subscriptionEntity;
 import com.remindMe.demo.report.reportEntity;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.remindMe.demo.notification.notificationEntity;
 
 @Getter // Ini Buat generate semua getter method (contohnya : getId(), getUsername())
@@ -47,6 +48,7 @@ public abstract class userEntity {
     ====================================================================================================================================================
     */
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL) 
+    @JsonIgnore
     private List<subscriptionEntity> userSubscriptions = new ArrayList<>();
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)

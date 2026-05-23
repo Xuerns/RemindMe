@@ -13,6 +13,7 @@ import java.util.concurrent.Flow.Subscription;
 @RestController // Menandakan class ini adalah REST API Controller
 @RequestMapping("/api/subscriptions") // Base URL untuk semua endpoint di class ini
 @RequiredArgsConstructor // Lombok otomatis membuatkan constructor untuk dependency injection
+ @CrossOrigin(origins = "*", allowedHeaders = "*")
 public class subscriptionController {
     private final subscriptionService subscriptionService;
     @Autowired

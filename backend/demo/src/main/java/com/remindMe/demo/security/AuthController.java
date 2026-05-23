@@ -12,6 +12,7 @@
     import jakarta.validation.Valid;
     import com.remindMe.demo.User.dto.registerRequest;
     import com.remindMe.demo.User.dto.loginRequest;
+import com.remindMe.demo.User.dto.loginResponse;
 
     @RestController 
     @RequestMapping("/auth")
@@ -36,8 +37,8 @@
         @PostMapping("/login")
         public ResponseEntity<?> login(@RequestBody loginRequest loginRequest) {
             try {
-                String token = authService.login(loginRequest);
-                return ResponseEntity.ok().body(token);
+                loginResponse res = authService.login(loginRequest);
+                return ResponseEntity.ok().body(res);
             } catch (RuntimeException e) {
                 return ResponseEntity.badRequest().body(e.getMessage());
             }

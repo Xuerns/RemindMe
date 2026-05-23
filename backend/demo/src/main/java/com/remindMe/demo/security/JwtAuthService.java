@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import com.remindMe.demo.User.userEntity;
 import com.remindMe.demo.User.userRepository;
 import com.remindMe.demo.User.dto.loginRequest;
+import com.remindMe.demo.User.dto.loginResponse;
 import com.remindMe.demo.User.dto.registerRequest;
 import com.remindMe.demo.User.regularUser;
 
@@ -23,6 +24,8 @@ public class JwtAuthService implements AuthService {
 
     @Autowired
     private JwtUtils jwtUtils;
+
+    private loginResponse  response;
     
     @Override
     public boolean register(registerRequest request) {
@@ -41,7 +44,7 @@ public class JwtAuthService implements AuthService {
     }
 
     @Override
-    public String login(loginRequest request) {
+    public loginResponse login(loginRequest request) {
         // Ambil user berdasakan email, jika tidak ada maka kirim message user tidak ditemukan
         userEntity user = userRepository.findByEmail(request.getEmail())
             .orElseThrow(() -> new RuntimeException("User tidak ditemukan"));
@@ -52,7 +55,11 @@ public class JwtAuthService implements AuthService {
 
         String token = jwtUtils.generateToken(user.getEmail());
 
-        return token;
+        response = new loginResponse();
+        response.setToken(token);
+        response.setId(user.getId());
+
+        return response;
     }
 
     @Override

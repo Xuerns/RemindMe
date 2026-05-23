@@ -3,9 +3,6 @@ import { checkToken } from "@/helper/checkToken";
 import { useRouter } from "next/navigation";
 import { useState, useEffect, ChangeEvent } from "react";
 
-const API_BASE = "http://localhost:8080/api/subscriptions";
-const USER_ID = "current-user-id"; // Ganti dengan userId dari auth/session kamu
-
 interface CategoryStyle {
   bg: string;
   color: string;
@@ -190,12 +187,34 @@ export default function SubscriptionPage() {
 
   async function fetchAll(): Promise<void> {
     setLoading(true);
+    const USER_ID = localStorage.getItem("id");
+    const token = localStorage.getItem("token");
     try {
       const [top3Res, allRes, totalRes, countRes] = await Promise.all([
-        fetch(`${API_BASE}/user/${USER_ID}/top3`),
-        fetch(`${API_BASE}/user/${USER_ID}`),
-        fetch(`${API_BASE}/user/${USER_ID}/total-monthly`),
-        fetch(`${API_BASE}/user/${USER_ID}/count`),
+        fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/subscriptions/user/${USER_ID}/top3`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          },
+        ),
+        fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/subscriptions/user/${USER_ID}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          },
+        ),
+        fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/subscriptions/user/${USER_ID}/total-monthly`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          },
+        ),
+        fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/subscriptions/user/${USER_ID}/count`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          },
+        ),
       ]);
       const top3: SubscriptionEntity[] = await top3Res.json();
       const all: SubscriptionEntity[] = await allRes.json();
@@ -212,21 +231,26 @@ export default function SubscriptionPage() {
   }
   const router = useRouter();
   useEffect(() => {
-    fetchAll();
-
     if (!checkToken()) {
       router.push("/");
     }
+    fetchAll();
   }, []);
 
   async function handleStatusChange(
     id: string,
     newStatus: string,
   ): Promise<void> {
+    const USER_ID = localStorage.getItem("id");
+    const token = localStorage.getItem("token");
     try {
-      await fetch(`${API_BASE}/${id}/status?status=${newStatus}`, {
-        method: "PATCH",
-      });
+      await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/${USER_ID}/status?status=${newStatus}`,
+        {
+          method: "PATCH",
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
       setAllSubs((prev) =>
         prev.map((s) =>
           s.id === id ? { ...s, status: newStatus as "PAID" | "UPCOMING" } : s,
@@ -245,10 +269,15 @@ export default function SubscriptionPage() {
 
   async function handleDelete(name: string): Promise<void> {
     if (!window.confirm(`Hapus subscription "${name}"?`)) return;
+    const token = localStorage.getItem("token");
     try {
-      await fetch(`${API_BASE}/delete/${encodeURIComponent(name)}`, {
-        method: "DELETE",
-      });
+      await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/subscriptions/delete/${encodeURIComponent(name)}`,
+        {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
       fetchAll();
     } catch (e) {
       console.error(e);

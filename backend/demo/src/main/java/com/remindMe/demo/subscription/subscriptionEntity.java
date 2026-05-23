@@ -3,6 +3,8 @@ package com.remindMe.demo.subscription;
 import jakarta.persistence.*;
 
 import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.remindMe.demo.User.userEntity;
 import com.remindMe.demo.report.reportEntity;
 import com.remindMe.demo.notification.notificationEntity;
@@ -47,6 +49,7 @@ public class subscriptionEntity {
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
+    @JsonIgnore
     private userEntity user;
 
     @Enumerated(EnumType.STRING)

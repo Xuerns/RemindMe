@@ -204,8 +204,9 @@ export default function LoginPage() {
           throw new Error(msg)
         }
 
-        const token = await res.text();
-        localStorage.setItem("token", token);
+        const response = await res.json();
+        localStorage.setItem("token", response.token);
+        localStorage.setItem("id", response.id);
 
         router.push("/dashboard");
       } catch (err) {
