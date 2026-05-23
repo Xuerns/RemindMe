@@ -7,7 +7,9 @@
     import org.springframework.web.bind.annotation.RequestBody;
     import org.springframework.web.bind.annotation.RequestMapping;
     import org.springframework.web.bind.annotation.RestController;
+   
 
+    import jakarta.validation.Valid;
     import com.remindMe.demo.User.dto.registerRequest;
     import com.remindMe.demo.User.dto.loginRequest;
 
@@ -22,7 +24,7 @@
         JwtUtils jwtUtils;
 
         @PostMapping("/register")
-        public ResponseEntity<?> register(@RequestBody registerRequest registerRequest) {
+        public ResponseEntity<?> register(@Valid @RequestBody registerRequest registerRequest) {
         try {
             boolean success = authService.register(registerRequest);
             return ResponseEntity.ok().body("Registrasi berhasil!");
@@ -40,4 +42,5 @@
                 return ResponseEntity.badRequest().body(e.getMessage());
             }
         }
+
     }

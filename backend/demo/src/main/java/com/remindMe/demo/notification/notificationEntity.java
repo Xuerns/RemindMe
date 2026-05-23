@@ -42,7 +42,7 @@ public class notificationEntity {
     @JoinColumn(name = "subscription_id")
     private subscriptionEntity subscription;
 
-    public void markAsSent() {
+    public void markAsSent() { 
         this.isSent = true;
     }
 }
