@@ -22,7 +22,6 @@ public class paymentEntity {
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
-    @Column(nullable = false)
     private LocalDate paymentDate;
 
     @ManyToOne
@@ -31,4 +30,19 @@ public class paymentEntity {
 
     @Column(nullable = false)
     private String paymentMethod;
+
+    @Column
+    private String noTelpon;
+
+    @Column
+    private String bankName;
+
+    @Column
+    private String accountName;
+
+    @Column
+    private String cardNumber;
+
+    @Column
+    private String cardExpired;
 }

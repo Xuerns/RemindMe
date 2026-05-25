@@ -36,7 +36,58 @@ public class paymentService {
 
         paymentEntity payment = new paymentEntity();
         payment.setUser(user);
-        payment.setPaymentMethod(paymentRequest.getPaymentMethod());
+
+        String method = paymentRequest.getPaymentMethod();
+        if (method == null || method.isBlank()) {
+            throw new RuntimeException("Metode pembayaran tidak boleh kosong");
+        }
+        payment.setPaymentMethod(method);
+
+        if (method.equalsIgnoreCase("gopay") || method.equalsIgnoreCase("ovo") || method.equalsIgnoreCase("dana")) {
+
+            if (paymentRequest.getNoTelpon() == null || paymentRequest.getNoTelpon().isBlank()) {
+                throw new RuntimeException("Data tidak lengkap, Silahkan isi nomor telpon kamu");
+            }
+            payment.setNoTelpon(paymentRequest.getNoTelpon());
+
+        } else if (method.equalsIgnoreCase("tranferbank")) {
+
+            if (paymentRequest.getBankName() == null || paymentRequest.getBankName().isBlank()) {
+                throw new RuntimeException("Data tidak lengkap, Silahkan isi nama bank kamu");
+            }
+
+            if (paymentRequest.getAccountName() == null || paymentRequest.getAccountName().isBlank()) {
+                throw new RuntimeException("Data tidak lengkap, Silahkan isi nama akun rekening kamu");
+            }
+
+            payment.setBankName(paymentRequest.getBankName());
+            payment.setAccountName(paymentRequest.getAccountName());
+
+        } else if (method.equalsIgnoreCase("creditcard")) {
+
+            if (paymentRequest.getAccountName() == null || paymentRequest.getAccountName().isBlank()) {
+                throw new RuntimeException("Data tidak lengkap, Silahkan isi nama akun rekening kamu");
+            }
+
+            if (paymentRequest.getCardNumber() == null || paymentRequest.getCardNumber().isBlank()) {
+                throw new RuntimeException("Data tidak lengkap, Silahkan isi nomor kartu kamu");
+            }
+
+            if (paymentRequest.getCardExpired() == null || paymentRequest.getCardExpired().isBlank()) {
+                throw new RuntimeException("Data tidak lengkap, Silahkan isi tanggal expired kartu kamu");
+            }
+
+            if (paymentRequest.getCVV() == null || paymentRequest.getCVV().isBlank()) {
+                throw new RuntimeException("Data tidak lengkap, Silahkan isi CVV kartu kamu");
+            }
+
+            payment.setAccountName(paymentRequest.getAccountName());
+            payment.setCardNumber(paymentRequest.getCardNumber());
+            payment.setCardExpired(paymentRequest.getCardExpired());
+
+        } else {
+            throw new RuntimeException("Metode pembayaran tidak didukung");
+        }
 
         payment.setPaymentDate(LocalDate.now());
         paymentRepository.save(payment);

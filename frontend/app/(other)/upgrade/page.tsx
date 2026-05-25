@@ -185,17 +185,19 @@ function Confetti() {
         <span
           key={p.id}
           className="upgrade-confetti-piece"
-          style={{
-            background: p.color,
-            width: p.size,
-            height: p.size,
-            left: "50%",
-            top: "50%",
-            animationDelay: p.delay,
-            "--confetti-x": p.x,
-            "--confetti-y": p.y,
-            "--confetti-r": p.r,
-          } as React.CSSProperties}
+          style={
+            {
+              background: p.color,
+              width: p.size,
+              height: p.size,
+              left: "50%",
+              top: "50%",
+              animationDelay: p.delay,
+              "--confetti-x": p.x,
+              "--confetti-y": p.y,
+              "--confetti-r": p.r,
+            } as React.CSSProperties
+          }
         />
       ))}
     </>
@@ -227,22 +229,49 @@ function SuccessCheck() {
   );
 }
 
-
 export default function UpgradePage() {
   const router = useRouter();
 
-  /* Auth check */
+  /* ── State ── */
+  const [isPremium, setIsPremium] = useState(false);
+  const [showPopup, setShowPopup] = useState(false);
+
+  /* Auth check & Fetch premium status */
   useEffect(() => {
     if (!checkToken()) {
       router.push("/");
+      return;
     }
-  }, [router]);
 
-  /* ── State ── */
-  const [showPopup, setShowPopup] = useState(false);
+    const checkPremiumStatus = async () => {
+      const token = localStorage.getItem("token");
+      const userId = localStorage.getItem("id");
+      if (!userId || !token) return;
+
+      try {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users/${userId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        if (res.ok) {
+          const userData = await res.json();
+          if (userData.type === "PREMIUM") {
+            setIsPremium(true);
+          }
+        }
+      } catch (err) {
+        console.error("Gagal memuat status user:", err);
+      }
+    };
+
+    checkPremiumStatus();
+  }, [router]);
   const [isClosing, setIsClosing] = useState(false);
   const [step, setStep] = useState<1 | 2 | 3>(1);
-  const [selectedMethod, setSelectedMethod] = useState<PaymentMethod | null>(null);
+  const [selectedMethod, setSelectedMethod] = useState<PaymentMethod | null>(
+    null,
+  );
   const [formData, setFormData] = useState<Record<string, string>>({});
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [isProcessing, setIsProcessing] = useState(false);
@@ -285,11 +314,16 @@ export default function UpgradePage() {
   /* Outside click */
   const handleOverlayClick = useCallback(
     (e: React.MouseEvent) => {
-      if (panelRef.current && !panelRef.current.contains(e.target as Node) && !isProcessing && !showSuccess) {
+      if (
+        panelRef.current &&
+        !panelRef.current.contains(e.target as Node) &&
+        !isProcessing &&
+        !showSuccess
+      ) {
         closePopup();
       }
     },
-    [closePopup, isProcessing, showSuccess]
+    [closePopup, isProcessing, showSuccess],
   );
 
   const selectMethod = (id: PaymentMethod) => {
@@ -301,7 +335,10 @@ export default function UpgradePage() {
   const handleFieldChange = (fieldName: string, value: string) => {
     /* Auto-format card number */
     if (fieldName === "card_number") {
-      value = value.replace(/\D/g, "").replace(/(.{4})/g, "$1 ").trim();
+      value = value
+        .replace(/\D/g, "")
+        .replace(/(.{4})/g, "$1 ")
+        .trim();
     }
     /* Auto-format expiry */
     if (fieldName === "expiry") {
@@ -330,13 +367,19 @@ export default function UpgradePage() {
       const val = formData[field.name]?.trim();
       if (!val) {
         errors[field.name] = `${field.label} wajib diisi`;
-      } else if (field.name === "card_number" && val.replace(/\s/g, "").length < 16) {
+      } else if (
+        field.name === "card_number" &&
+        val.replace(/\s/g, "").length < 16
+      ) {
         errors[field.name] = "Nomor kartu harus 16 digit";
       } else if (field.name === "phone" && val.length < 10) {
         errors[field.name] = "Nomor telepon tidak valid";
       } else if (field.name === "cvv" && val.length < 3) {
         errors[field.name] = "CVV tidak valid";
-      } else if (field.name === "expiry" && (val.length < 5 || !val.includes("/"))) {
+      } else if (
+        field.name === "expiry" &&
+        (val.length < 5 || !val.includes("/"))
+      ) {
         errors[field.name] = "Format MM/YY";
       }
     });
@@ -358,18 +401,52 @@ export default function UpgradePage() {
     if (!validateForm()) return;
     setIsProcessing(true);
 
-    /* Simulate payment processing */
-    await new Promise((resolve) => setTimeout(resolve, 2200));
+    const token = localStorage.getItem("token");
+    const userId = localStorage.getItem("id");
 
-    setIsProcessing(false);
-    setShowSuccess(true);
-    setStep(3);
+    const payload = {
+      userId: userId,
+      paymentMethod: selectedMethod,
+      noTelpon: formData.phone || null,
+      bankName: formData.bank_name || null,
+      accountName: formData.account_name || formData.card_holder || null,
+      cardNumber: formData.card_number
+        ? formData.card_number.replace(/\s/g, "")
+        : null,
+      cardExpired: formData.expiry || null,
+      cvv: formData.cvv || null,
+    };
 
-    /* Auto redirect to dashboard */
-    setTimeout(() => {
-      document.body.style.overflow = "";
-      router.push("/dashboard");
-    }, 3000);
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/payment/make`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(payload),
+        },
+      );
+
+      if (!res.ok) {
+        const errorMsg = await res.text();
+        throw new Error(errorMsg);
+      }
+
+      setIsProcessing(false);
+      setShowSuccess(true);
+      setStep(3);
+
+      setTimeout(() => {
+        document.body.style.overflow = "";
+        router.push("/dashboard");
+      }, 3000);
+    } catch {
+      setIsProcessing(false);
+      alert("Pembayaran gagal, silahkan coba lagi!");
+    }
   };
 
   const currentMethod = PAYMENT_METHODS.find((m) => m.id === selectedMethod);
@@ -402,7 +479,6 @@ export default function UpgradePage() {
       <div className="relative z-10 max-w-[960px] mx-auto px-6 pt-4 pb-20 sm:px-10">
         {/* ── Headline ── */}
         <div className="text-center mb-12 upgrade-heading-enter">
-          
           <h1
             className="text-on-surface font-bold tracking-tight leading-tight m-0"
             style={{ fontSize: "clamp(28px, 4vw, 40px)" }}
@@ -410,7 +486,8 @@ export default function UpgradePage() {
             Tingkatkan Produktivitasmu
           </h1>
           <p className="text-on-surface-variant text-base mt-3 max-w-[50ch] mx-auto leading-relaxed m-0">
-            Kelola semua subscription tanpa batas dan dapatkan insight lengkap untuk pengelolaan keuangan yang lebih cerdas.
+            Kelola semua subscription tanpa batas dan dapatkan insight lengkap
+            untuk pengelolaan keuangan yang lebih cerdas.
           </p>
         </div>
 
@@ -428,7 +505,9 @@ export default function UpgradePage() {
                 Reguler
               </p>
               <div className="flex items-baseline gap-1 mt-2">
-                <span className="text-4xl font-bold text-on-surface tracking-tight">Gratis</span>
+                <span className="text-4xl font-bold text-on-surface tracking-tight">
+                  Gratis
+                </span>
               </div>
               <p className="text-sm text-on-surface-variant mt-2 m-0">
                 Cocok untuk mulai mencatat subscription
@@ -448,17 +527,27 @@ export default function UpgradePage() {
                       className="upgrade-check-enter shrink-0 w-5 h-5 rounded-full 
                                  bg-primary-container flex items-center justify-center"
                     >
-                      <Check size={12} strokeWidth={2.5} className="text-primary" />
+                      <Check
+                        size={12}
+                        strokeWidth={2.5}
+                        className="text-primary"
+                      />
                     </span>
                   ) : (
                     <span
                       className="shrink-0 w-5 h-5 rounded-full bg-surface-container 
                                  flex items-center justify-center"
                     >
-                      <Lock size={10} strokeWidth={2} className="text-outline" />
+                      <Lock
+                        size={10}
+                        strokeWidth={2}
+                        className="text-outline"
+                      />
                     </span>
                   )}
-                  <span className={f.available ? "text-on-surface" : "text-outline"}>
+                  <span
+                    className={f.available ? "text-on-surface" : "text-outline"}
+                  >
                     {f.text}
                   </span>
                 </li>
@@ -467,12 +556,13 @@ export default function UpgradePage() {
 
             <button
               id="upgrade-reguler-btn"
-              disabled
-              className="w-full py-3 px-6 rounded-full text-sm font-semibold
-                         bg-surface-container text-on-surface-variant
-                         cursor-default opacity-60"
+              disabled={!isPremium}
+              className={`w-full py-3 px-6 rounded-full text-sm font-semibold transition-all duration-200
+                         ${!isPremium 
+                           ? "bg-surface-container text-on-surface-variant cursor-default opacity-60" 
+                           : "bg-primary text-on-primary cursor-pointer hover:bg-primary/90"}`}
             >
-              Paket Saat Ini
+              {!isPremium ? "Paket Saat Ini" : "Kembali ke Reguler"}
             </button>
           </div>
 
@@ -483,7 +573,8 @@ export default function UpgradePage() {
             style={{
               background:
                 "linear-gradient(145deg, var(--color-inverse-surface) 0%, #2d4258 50%, var(--color-inverse-surface) 100%)",
-              boxShadow: "var(--shadow-elevated), 0 0 0 1px rgba(255,255,255,0.06) inset",
+              boxShadow:
+                "var(--shadow-elevated), 0 0 0 1px rgba(255,255,255,0.06) inset",
             }}
           >
             {/* Recommended badge */}
@@ -501,11 +592,15 @@ export default function UpgradePage() {
                 Premium
               </p>
               <div className="flex items-baseline gap-1 mt-2">
-                <span className="text-sm text-inverse-on-surface/50 font-medium">Rp</span>
+                <span className="text-sm text-inverse-on-surface/50 font-medium">
+                  Rp
+                </span>
                 <span className="text-4xl font-bold text-inverse-on-surface tracking-tight">
                   99.999
                 </span>
-                <span className="text-sm text-inverse-on-surface/50 font-medium">/bulan</span>
+                <span className="text-sm text-inverse-on-surface/50 font-medium">
+                  /bulan
+                </span>
               </div>
               <p className="text-sm text-inverse-on-surface/50 mt-2 m-0">
                 Semua fitur, tanpa batasan
@@ -524,7 +619,11 @@ export default function UpgradePage() {
                     className="upgrade-check-enter shrink-0 w-5 h-5 rounded-full 
                                bg-secondary flex items-center justify-center"
                   >
-                    <Check size={12} strokeWidth={2.5} className="text-on-secondary" />
+                    <Check
+                      size={12}
+                      strokeWidth={2.5}
+                      className="text-on-secondary"
+                    />
                   </span>
                   <span className="text-inverse-on-surface/90">{f.text}</span>
                 </li>
@@ -534,19 +633,30 @@ export default function UpgradePage() {
             <button
               id="upgrade-premium-btn"
               onClick={openPopup}
-              className="upgrade-btn-press relative z-10 w-full py-3.5 px-6 rounded-full
-                         text-sm font-semibold cursor-pointer
-                         border-0
-                         text-on-secondary"
+              disabled={isPremium}
+              className={`upgrade-btn-press relative z-10 w-full py-3.5 px-6 rounded-full
+                         text-sm font-semibold border-0 transition-all duration-200
+                         ${isPremium ? "opacity-60 cursor-not-allowed" : "cursor-pointer text-on-secondary"}`}
               style={{
-                background:
-                  "linear-gradient(135deg, var(--color-secondary) 0%, var(--color-tertiary) 100%)",
-                boxShadow: "0 6px 24px -4px rgba(101, 91, 104, 0.4)",
+                background: isPremium 
+                  ? "var(--color-surface-container)" 
+                  : "linear-gradient(135deg, var(--color-secondary) 0%, var(--color-tertiary) 100%)",
+                boxShadow: isPremium ? "none" : "0 6px 24px -4px rgba(101, 91, 104, 0.4)",
+                color: isPremium ? "var(--color-on-surface-variant)" : "var(--color-on-secondary)"
               }}
             >
               <span className="flex items-center justify-center gap-2">
-                <Zap size={16} strokeWidth={2.2} />
-                Upgrade Sekarang
+                {isPremium ? (
+                  <>
+                    <Crown size={16} strokeWidth={2.2} />
+                    Paket Saat Ini
+                  </>
+                ) : (
+                  <>
+                    <Zap size={16} strokeWidth={2.2} />
+                    Upgrade Sekarang
+                  </>
+                )}
               </span>
             </button>
           </div>
@@ -567,7 +677,9 @@ export default function UpgradePage() {
 
       {showPopup && (
         <div className="upgrade-overlay" onClick={handleOverlayClick}>
-          <div className={`upgrade-overlay-bg ${isClosing ? "upgrade-overlay-bg--exit" : "upgrade-overlay-bg--enter"}`} />
+          <div
+            className={`upgrade-overlay-bg ${isClosing ? "upgrade-overlay-bg--exit" : "upgrade-overlay-bg--enter"}`}
+          />
 
           <div
             ref={panelRef}
@@ -579,7 +691,9 @@ export default function UpgradePage() {
                 <div className="flex items-center justify-between mb-4">
                   <div>
                     <h2 className="text-lg font-semibold text-on-surface m-0">
-                      {step === 1 ? "Pilih Metode Pembayaran" : "Detail Pembayaran"}
+                      {step === 1
+                        ? "Pilih Metode Pembayaran"
+                        : "Detail Pembayaran"}
                     </h2>
                     <p className="text-xs text-on-surface-variant mt-1 m-0">
                       Premium · Rp99.999/bulan
@@ -611,9 +725,15 @@ export default function UpgradePage() {
                   />
                 </div>
                 <div className="flex justify-between text-[10px] text-on-surface-variant/50 mt-1.5 font-medium">
-                  <span className={step >= 1 ? "text-secondary" : ""}>Metode</span>
-                  <span className={step >= 2 ? "text-secondary" : ""}>Detail</span>
-                  <span className={step >= 3 ? "text-secondary" : ""}>Selesai</span>
+                  <span className={step >= 1 ? "text-secondary" : ""}>
+                    Metode
+                  </span>
+                  <span className={step >= 2 ? "text-secondary" : ""}>
+                    Detail
+                  </span>
+                  <span className={step >= 3 ? "text-secondary" : ""}>
+                    Selesai
+                  </span>
                 </div>
               </div>
             )}
@@ -724,7 +844,9 @@ export default function UpgradePage() {
                         <select
                           id={`field-${field.name}`}
                           value={formData[field.name] || ""}
-                          onChange={(e) => handleFieldChange(field.name, e.target.value)}
+                          onChange={(e) =>
+                            handleFieldChange(field.name, e.target.value)
+                          }
                           className={`upgrade-input w-full px-4 py-3 rounded-xl text-sm
                                      bg-surface-container-lowest
                                      border text-on-surface
@@ -749,7 +871,9 @@ export default function UpgradePage() {
                           placeholder={field.placeholder}
                           maxLength={field.maxLength}
                           value={formData[field.name] || ""}
-                          onChange={(e) => handleFieldChange(field.name, e.target.value)}
+                          onChange={(e) =>
+                            handleFieldChange(field.name, e.target.value)
+                          }
                           className={`upgrade-input w-full px-4 py-3 rounded-xl text-sm
                                      bg-surface-container-lowest
                                      border text-on-surface
@@ -835,17 +959,21 @@ export default function UpgradePage() {
                   Pembayaran Berhasil!
                 </h2>
                 <p className="text-sm text-on-surface-variant mt-2 mb-0 max-w-[32ch] mx-auto leading-relaxed">
-                  Selamat! Akun kamu telah di-upgrade ke Premium. Nikmati semua fitur tanpa batas.
+                  Selamat! Akun kamu telah di-upgrade ke Premium. Nikmati semua
+                  fitur tanpa batas.
                 </p>
 
                 <div className="mt-6 flex items-center justify-center gap-2 text-xs text-on-surface-variant/50">
-                  <span className="upgrade-spinner" style={{
-                    borderColor: "var(--color-outline-variant)",
-                    borderTopColor: "var(--color-secondary)",
-                    width: 14,
-                    height: 14,
-                    borderWidth: 2,
-                  }} />
+                  <span
+                    className="upgrade-spinner"
+                    style={{
+                      borderColor: "var(--color-outline-variant)",
+                      borderTopColor: "var(--color-secondary)",
+                      width: 14,
+                      height: 14,
+                      borderWidth: 2,
+                    }}
+                  />
                   Mengalihkan ke dashboard...
                 </div>
               </div>

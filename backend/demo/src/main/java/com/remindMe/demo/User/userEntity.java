@@ -16,15 +16,22 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.remindMe.demo.notification.notificationEntity;
 
 @Getter // Ini Buat generate semua getter method (contohnya : getId(), getUsername())
-@Setter // Ini Buat generate semua setter method (contohnya: setUsername(String username), setEmail(String email))
+@Setter // Ini Buat generate semua setter method (contohnya: setUsername(String
+        // username), setEmail(String email))
 @NoArgsConstructor // Ini Buat generate Contructor tanpa parameter
 @AllArgsConstructor // Ini Buat generate Contructor dengan semua parameter
-@Entity // Ini menandakan bahwa class ini sebuah entity yang merepresentasikan tabel dalam database
+@Entity // Ini menandakan bahwa class ini sebuah entity yang merepresentasikan tabel
+        // dalam database
 @Table(name = "users") // Ini artinya nanti nama tablenya adalah "users"
 
-// Konsep polymorphism dipakai disini, jadi nanti kita bisa punya 2 class yang extend 
-@Inheritance(strategy = InheritanceType.SINGLE_TABLE) // Ini kan kita dibedakan 2 tipe reguler dan premium, ini buat bikin "type" sebagai discriminator column yang nanti bisa kita pake buat bedain antara user reguler dan premium
-@DiscriminatorColumn(name = "type", discriminatorType = DiscriminatorType.STRING) // Ini buat bikin column "type" yang nanti isinya bisa "REGULAR" atau "PREMIUM"
+// Konsep polymorphism dipakai disini, jadi nanti kita bisa punya 2 class yang
+// extend
+@Inheritance(strategy = InheritanceType.SINGLE_TABLE) // Ini kan kita dibedakan 2 tipe reguler dan premium, ini buat
+                                                      // bikin "type" sebagai discriminator column yang nanti bisa kita
+                                                      // pake buat bedain antara user reguler dan premium
+@DiscriminatorColumn(name = "type", discriminatorType = DiscriminatorType.STRING) // Ini buat bikin column "type" yang
+                                                                                  // nanti isinya bisa "REGULAR" atau
+                                                                                  // "PREMIUM"
 public abstract class userEntity {
 
     @Id
@@ -41,13 +48,19 @@ public abstract class userEntity {
     private String password;
 
     /*
-    ======== Penjelasan ================================================================================================================================
-    mappedBy:  Arti dari mappedBy itu berarti relasi ini di kontrol / dimiliki oleh field "user"
-    cascade = CascadeType: All: Artinya itu apapun yang terjadi / dilakukan kepada user maka akan mempengaruhi subcription yang dimiliki user tersebut 
-    tujuannya itu biar ketika kita hapus user maka semua subscription yang dimiliki user akan terhapus juga 
-    ====================================================================================================================================================
-    */
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL) 
+     * ======== Penjelasan
+     * =============================================================================
+     * ===================================================
+     * mappedBy: Arti dari mappedBy itu berarti relasi ini di kontrol / dimiliki
+     * oleh field "user"
+     * cascade = CascadeType: All: Artinya itu apapun yang terjadi / dilakukan
+     * kepada user maka akan mempengaruhi subcription yang dimiliki user tersebut
+     * tujuannya itu biar ketika kita hapus user maka semua subscription yang
+     * dimiliki user akan terhapus juga
+     * =============================================================================
+     * =======================================================================
+     */
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     @JsonIgnore
     private List<subscriptionEntity> userSubscriptions = new ArrayList<>();
 
@@ -57,7 +70,13 @@ public abstract class userEntity {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<notificationEntity> userNotifications = new ArrayList<>();
 
+    public String getType() {
+        return this instanceof premiumUser ? "PREMIUM" : "REGULAR";
+    }
+
     public abstract boolean canAccessAnalytics();
+
     public abstract int getMaxSubscriptions();
+
     public abstract boolean canExportReport();
 }
