@@ -4,6 +4,11 @@ import lombok.RequiredArgsConstructor;
 
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+
+import com.remindMe.demo.subscription.DTO.subscriptionRequest;
+import com.remindMe.demo.User.userRepository;
+import com.remindMe.demo.User.userEntity;
+
 import java.util.UUID; //untuk generate id yang varchar(255)
 import java.util.List;
 
@@ -12,6 +17,7 @@ import java.util.List;
 
 public class subscriptionService {
     private final subscriptionRepository subscriptionRepo;
+    private final userRepository userRepo;
 
     public void updateSubscription(String id, subscriptionEntity sub) {
         subscriptionEntity existSub = subscriptionRepo.findById(id)
@@ -57,12 +63,18 @@ public class subscriptionService {
     }
 
     // method untuk menambahkan subscription
-    public subscriptionEntity addSubscription(subscriptionEntity sub) {
-        if (sub.getId() == null || sub.getId().isEmpty()) {
-            sub.setId(UUID.randomUUID().toString());
+    public subscriptionEntity addSubscription(subscriptionRequest request) {
+        subscriptionEntity sub = new subscriptionEntity();
+        
+        sub.setName(request.getName());
+        sub.setCategory(request.getCategory());
+        sub.setPrice(request.getPrice());
+        sub.setDuDate(request.getDuDate());
+        sub.setStatus(subscriptionEntity.statusSubs.valueOf(request.getStatus()));
+        sub.setActive(request.isActive());
 
-        }
-
+        userEntity user = userRepo.findById(request.getUserId()).orElseThrow(() -> new RuntimeException("User tidak ditemukan"));
+        sub.setUser(user);
         return subscriptionRepo.save(sub);
     }
 

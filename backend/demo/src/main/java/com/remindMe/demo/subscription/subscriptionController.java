@@ -6,6 +6,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import com.remindMe.demo.subscription.DTO.subscriptionRequest;
+
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.Flow.Subscription;
@@ -59,9 +62,9 @@ public class subscriptionController {
     }
 
     @PostMapping("/add")
-    public subscriptionEntity addSubscription(@RequestBody subscriptionEntity subscription) {
+    public subscriptionEntity addSubscription(@RequestBody subscriptionRequest request) {
 
-        return subscriptionService.addSubscription(subscription); // memasukkan isi dari subscription ke method add di
+        return subscriptionService.addSubscription(request); // memasukkan isi dari subscription ke method add di
                                                                   // service
     }
 
