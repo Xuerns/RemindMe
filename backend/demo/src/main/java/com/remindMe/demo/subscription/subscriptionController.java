@@ -23,8 +23,8 @@ public class subscriptionController {
     private subscriptionRepository subscriptionRepository;
 
     @PutMapping("/{id}")
-    public ResponseEntity<String> updateSubscription(@PathVariable String id, @RequestBody subscriptionEntity sub) {
-        subscriptionService.updateSubscription(id, sub);
+    public ResponseEntity<String> updateSubscription(@PathVariable String id, @RequestBody subscriptionRequest request) {
+        subscriptionService.updateSubscription(id, request);
         return ResponseEntity.ok("Subscription berhasil diupdate!");
     }
 
@@ -68,9 +68,9 @@ public class subscriptionController {
                                                                   // service
     }
 
-    @DeleteMapping("/delete/{name}")
-    public String deleteSubscription(@PathVariable String name) {
-        return subscriptionService.deleteSubscription(name);
+    @DeleteMapping("/delete/{id}")
+    public String deleteSubscription(@PathVariable String id) {
+        return subscriptionService.deleteSubscription(id);
     }
 
 }

@@ -11,7 +11,7 @@ import java.util.Optional;
 
 @Repository
 public interface subscriptionRepository extends JpaRepository<subscriptionEntity, String> {
-    List<subscriptionEntity> findByUserId(String userId);
+    List<subscriptionEntity> findByUserIdOrderByDuDate(String userId);
 
     List<subscriptionEntity> findByCategory(String category);
 

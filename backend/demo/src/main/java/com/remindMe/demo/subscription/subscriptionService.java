@@ -19,20 +19,20 @@ public class subscriptionService {
     private final subscriptionRepository subscriptionRepo;
     private final userRepository userRepo;
 
-    public void updateSubscription(String id, subscriptionEntity sub) {
+    public void updateSubscription(String id, subscriptionRequest request) {
         subscriptionEntity existSub = subscriptionRepo.findById(id)
                 .orElseThrow(() -> new RuntimeException("Subscription dengan ID " + id + " tidak ditemukan"));
-        existSub.setName(sub.getName());
-        existSub.setCategory(sub.getCategory());
-        existSub.setPrice(sub.getPrice());
-        existSub.setActive(sub.isActive());
-        existSub.setDuDate(sub.getDuDate());
-        existSub.setStatus(sub.getStatus());
+        existSub.setName(request.getName());
+        existSub.setCategory(request.getCategory());
+        existSub.setPrice(request.getPrice());
+        existSub.setActive(request.isActive());
+        existSub.setDuDate(request.getDuDate());
+        existSub.setStatus(subscriptionEntity.statusSubs.valueOf(request.getStatus()));
         subscriptionRepo.save(existSub);
     }
 
     public List<subscriptionEntity> getAll(String userId) {
-        return subscriptionRepo.findByUserId(userId);
+        return subscriptionRepo.findByUserIdOrderByDuDate(userId);
     }
 
     public List<subscriptionEntity> search(String keyword) {
@@ -78,14 +78,11 @@ public class subscriptionService {
         return subscriptionRepo.save(sub);
     }
 
-    public String deleteSubscription(String name) {
-        subscriptionEntity sub = subscriptionRepo.findByName(name)
-                .orElseThrow(() -> new RuntimeException("Subscription dengan nama " + name + " tidak ditemukan"));
-
-        String realId = sub.getId();
-
-        subscriptionRepo.deleteById(realId);
-
-        return "Subscription dengan nama: " + name + " berhasil dihapus!";
+    public String deleteSubscription(String id) {
+        if(!subscriptionRepo.existsById(id)){
+            throw new RuntimeException("Subscription tidak ditemukan");
+        }
+        subscriptionRepo.deleteById(id);
+        return "Subscription dengan id:"+ id +"berhasil dihapus!";
     }
 }

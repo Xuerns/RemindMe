@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect, ChangeEvent } from "react";
+import { Pencil, Trash2 } from "lucide-react";
 
 interface CategoryStyle {
   bg: string;
@@ -76,7 +77,7 @@ function TopCard({ sub }: { sub: SubscriptionEntity }) {
           background: isPaid ? "#D1FAE5" : "#FEF3C7",
           color: isPaid ? "#065F46" : "#92400E",
         }}>
-          {isPaid ? "ACTIVE" : "UPCOMING"}
+          {isPaid ? "PAID" : "UPCOMING"}
         </span>
       </div>
       <div>
@@ -103,6 +104,7 @@ export default function SubscriptionPage() {
   const [loading, setLoading] = useState<boolean>(true);
   const [editingStatus, setEditingStatus] = useState<string | null>(null);
   const [searchKeyword, setSearchKeyword] = useState<string>("");
+  const [deleteConfirm, setDeleteConfirm] = useState<{ id: String; name: string } | null>(null);
   const PAGE_SIZE = 3;
 
   // --- Add Modal State ---
@@ -116,6 +118,18 @@ export default function SubscriptionPage() {
   });
   const [addLoading, setAddLoading] = useState<boolean>(false);
   const [addError, setAddError] = useState<string>("");
+  const [showEditModal, setShowEditModal] = useState<boolean>(false);
+  const [editForm, setEditForm] = useState({
+    id: "",
+    name: "",
+    category: "",
+    duDate: "",
+    price: "",
+    status: "UPCOMING" as "PAID" | "UPCOMING",
+    isActive: true,
+  });
+  const [editLoading, setEditLoading] = useState<boolean>(false);
+  const [editError, setEditError] = useState<string>("");
 
   async function fetchAll(): Promise<void> {
     setLoading(true);
@@ -165,14 +179,16 @@ export default function SubscriptionPage() {
   useEffect(() => { fetchAll(); }, []);
 
   async function handleStatusChange(id: string, newStatus: string): Promise<void> {
-    const USER_ID = localStorage.getItem("id");
     const token = localStorage.getItem("token");
     try {
       await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/${USER_ID}/status?status=${newStatus}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/subscriptions/${id}/status?status=${newStatus}`,
         {
           method: "PATCH",
-          headers: { Authorization: `Bearer ${token}` },
+          headers: {
+            Authorization: `Bearer ${token}`,
+            
+          },
         },
       );
       setAllSubs((prev) =>
@@ -185,16 +201,17 @@ export default function SubscriptionPage() {
           s.id === id ? { ...s, status: newStatus as "PAID" | "UPCOMING" } : s,
         ),
       );
+      fetchAll();
     } catch (e) { console.error(e); }
     setEditingStatus(null);
   }
 
-  async function handleDelete(name: string): Promise<void> {
+  async function handleDelete(): Promise<void> {
+    if (!deleteConfirm) return;
     const token = localStorage.getItem("token");
-    if (!window.confirm(`Hapus subscription "${name}"?`)) return;
     try {
       await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/subscriptions/delete/${encodeURIComponent(name)}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/subscriptions/delete/${deleteConfirm.id}`,
         {
           method: "DELETE",
           headers: { Authorization: `Bearer ${token}` },
@@ -202,14 +219,12 @@ export default function SubscriptionPage() {
       );
       fetchAll();
     } catch (e) { console.error(e); }
+    setDeleteConfirm(null);
   }
 
   async function handleAddSubmit(): Promise<void> {
     const USER_ID = localStorage.getItem("id");
     const token = localStorage.getItem("token");
-    console.log("USER_ID:", USER_ID);       // ← cek apakah null
-    console.log("token:", token);           // ← cek apakah null
-    console.log("addForm:", addForm);
     if (!addForm.name.trim() || !addForm.category.trim() || !addForm.duDate || !addForm.price) {
       setAddError("Semua field wajib diisi.");
       return;
@@ -251,6 +266,63 @@ export default function SubscriptionPage() {
     setAddLoading(false);
   }
 
+  function openEditModal(sub: SubscriptionEntity): void {
+    setEditForm({
+      id: sub.id,
+      name: sub.name,
+      category: sub.category,
+      duDate: sub.duDate ? sub.duDate.slice(0, 10) : "",
+      price: String(sub.price),
+      status: sub.status,
+      isActive: true,
+    });
+    setEditError("");
+    setShowEditModal(true);
+  }
+
+  async function handleEditSubmit(): Promise<void> {
+    const USER_ID = localStorage.getItem("id");
+    const token = localStorage.getItem("token");
+
+    if (!editForm.name.trim() || !editForm.category.trim() || !editForm.duDate || !editForm.price) {
+      setEditError("Semua field wajib diisi.");
+      return;
+    }
+    if (parseFloat(editForm.price) < 0) {
+      setEditError("Harga tidak boleh negatif.");
+      return;
+    }
+
+    setEditLoading(true);
+    setEditError("");
+    try {
+      const payload = {
+        name: editForm.name.trim(),
+        category: editForm.category.trim(),
+        duDate: editForm.duDate,
+        price: parseFloat(editForm.price),
+        status: editForm.status,
+        active: editForm.isActive,
+        userId: USER_ID,
+      };
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/subscriptions/${editForm.id}`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) throw new Error("Gagal mengupdate subscription.");
+      setShowEditModal(false);
+      fetchAll();
+    } catch (e: unknown) {
+      setEditError(e instanceof Error ? e.message : "Terjadi kesalahan.");
+    }
+    setEditLoading(false);
+  }
+
+
   function handleSearch(e: ChangeEvent<HTMLInputElement>): void {
     setSearchKeyword(e.target.value);
     setPage(0);
@@ -272,7 +344,7 @@ export default function SubscriptionPage() {
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 28 }}>
         <div>
-          <h1 style={{ fontSize: 28, fontWeight: 800, margin: 0, letterSpacing: -0.5 }}>Subscription Portfolio</h1>
+          <h1 style={{ fontSize: 28, fontWeight: 800, margin: 0, letterSpacing: -0.5 }}>Subscription List</h1>
           <p style={{ color: "#6B7280", marginTop: 6, fontSize: 14, maxWidth: 440 }}>
             Optimize your monthly spending and track renewal dates across all your digital services in one crystalline view.
           </p>
@@ -341,7 +413,7 @@ export default function SubscriptionPage() {
                       <AppIcon name={sub.name} />
                       <div>
                         <div style={{ fontWeight: 600, fontSize: 14 }}>{sub.name}</div>
-                        <div style={{ color: "#9CA3AF", fontSize: 11 }}>{sub.isActive ? "Monthly Billing" : "Inactive"}</div>
+                        <div style={{ color: "#9CA3AF", fontSize: 11 }}>{sub.isActive ? "Monthly Billing" : "Active"}</div>
                       </div>
                     </div>
                   </td>
@@ -356,39 +428,47 @@ export default function SubscriptionPage() {
                   <td style={{ padding: "14px 12px", fontWeight: 600 }}>
                     Rp {Number(sub.price).toLocaleString("id-ID")}
                   </td>
-                  <td style={{ padding: "14px 12px" }}>
-                    {editingStatus === sub.id ? (
+
+                  <td style={{ padding: "16px 12px" }}>
+                    <div style={{ position: "relative", display: "inline-block" }}>
                       <select
                         value={sub.status}
                         autoFocus
-                        onChange={(e: ChangeEvent<HTMLSelectElement>) => handleStatusChange(sub.id, e.target.value)}
-                        onBlur={() => setEditingStatus(null)}
-                        style={{ padding: "4px 8px", borderRadius: 8, border: "1px solid #E5E7EB", fontSize: 12, cursor: "pointer" }}
+                        onChange={e => handleStatusChange(sub.id, e.target.value as "PAID" | "UPCOMING")}
+                        style={{
+                          appearance: "none",
+                          padding: "4px 8px",
+                          borderRadius: 8,
+                          border: "none",
+                          fontWeight: 600,
+                          fontSize: 12,
+                          cursor: "pointer",
+                          outline: "none",
+                          background: sub.status === "PAID" ? "#D1FAE5" : "#FEF3C7",
+                          color: sub.status === "PAID" ? "#065F46" : "#92400E",
+                        }}
                       >
-                        <option value="PAID">Paid</option>
-                        <option value="UPCOMING">Upcoming</option>
+                        <option value="PAID">● Paid</option>
+                        <option value="UPCOMING">● Upcoming</option>
                       </select>
-                    ) : (
-                      <span onClick={() => setEditingStatus(sub.id)} style={{ cursor: "pointer" }} title="Click to change status">
-                        <StatusBadge status={sub.status} />
-                      </span>
-                    )}
+                    </div>
                   </td>
+
                   <td style={{ padding: "14px 12px" }}>
                     <div style={{ display: "flex", gap: 10 }}>
                       <button
-                        onClick={() => window.location.href = `/subscriptions/edit/${sub.id}`}
+                        onClick={() => openEditModal(sub)}
                         title="Edit"
                         style={{ background: "none", border: "none", cursor: "pointer", color: "#6B7280", padding: 4, borderRadius: 6 }}
                       >
-                        ✏️
+                        <Pencil size={16}/>
                       </button>
                       <button
-                        onClick={() => handleDelete(sub.name)}
+                        onClick={() => setDeleteConfirm({ id: sub.id, name: sub.name })}
                         title="Delete"
                         style={{ background: "none", border: "none", cursor: "pointer", color: "#EF4444", padding: 4, borderRadius: 6 }}
                       >
-                        🗑️
+                        <Trash2 size={16}/>
                       </button>
                     </div>
                   </td>
@@ -475,6 +555,180 @@ export default function SubscriptionPage() {
       >
         +
       </button>
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirm && (
+        <div
+          onClick={() => setDeleteConfirm(null)}
+          style={{
+            position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            zIndex: 1000, backdropFilter: "blur(2px)",
+          }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{
+              background: "#fff", borderRadius: 20, padding: "32px",
+              width: "100%", maxWidth: 380, boxShadow: "0 20px 60px rgba(0,0,0,0.15)",
+              fontFamily: "'DM Sans', sans-serif", textAlign: "center",
+            }}
+          >
+            <div style={{ fontSize: 40, marginBottom: 16 }}>🗑️</div>
+            <div style={{ fontWeight: 800, fontSize: 18, color: "#1A1523", marginBottom: 8 }}>
+              Hapus Subscription
+            </div>
+            <div style={{ fontSize: 14, color: "#6B7280", marginBottom: 24 }}>
+              Yakin ingin menghapus <span style={{ fontWeight: 700, color: "1A1523" }}>"{deleteConfirm.name}"</span>?
+            </div>
+            <div style={{ display: "flex", gap: 10 }}>
+              <button
+                onClick={() => setDeleteConfirm(null)}
+                style={{
+                  flex: 1, padding: "11px", borderRadius: 10, border: "1.5px solid #E5E7EB",
+                  background: "#fff", color: "#374151", fontWeight: 600, fontSize: 14,
+                  cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
+                }}
+              >
+                Tidak
+              </button>
+              <button
+                onClick={handleDelete}
+                style={{
+                  flex: 1, padding: "11px", borderRadius: 10, border: "1.5px solid #E5E7EB",
+                  background: "#fff", color: "#374151", fontWeight: 600, fontSize: 14,
+                  cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
+                }}
+              >
+                Hapus
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Subscription Modal */}
+      {showEditModal && (
+        <div
+          onClick={() => setShowEditModal(false)}
+          style={{
+            position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            zIndex: 1000, backdropFilter: "blur(2px)",
+          }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{
+              background: "#fff", borderRadius: 20, padding: "32px 32px 28px",
+              width: "100%", maxWidth: 460, boxShadow: "0 20px 60px rgba(0,0,0,0.15)",
+              fontFamily: "'DM Sans', sans-serif",
+            }}
+          >
+            {/* Header */}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
+              <div>
+                <div style={{ fontWeight: 800, fontSize: 20, color: "#1A1523" }}>Edit Subscription</div>
+                <div style={{ fontSize: 13, color: "#9CA3AF", marginTop: 2 }}>Perbarui data langganan kamu</div>
+              </div>
+              <button
+                onClick={() => setShowEditModal(false)}
+                style={{ background: "#F3F4F6", border: "none", borderRadius: 8, width: 32, height: 32, cursor: "pointer", fontSize: 16, color: "#6B7280", display: "flex", alignItems: "center", justifyContent: "center" }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Form */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+
+              {/* Nama */}
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 6, textTransform: "uppercase", letterSpacing: 0.5 }}>
+                  Nama Aplikasi
+                </label>
+                <input
+                  type="text"
+                  value={editForm.name}
+                  onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))}
+                  style={{ width: "100%", padding: "10px 14px", borderRadius: 10, border: "1.5px solid #E5E7EB", fontSize: 14, outline: "none", boxSizing: "border-box", fontFamily: "'DM Sans', sans-serif" }}
+                />
+              </div>
+
+              {/* Kategori */}
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 6, textTransform: "uppercase", letterSpacing: 0.5 }}>
+                  Kategori
+                </label>
+                <select
+                  value={editForm.category}
+                  onChange={e => setEditForm(f => ({ ...f, category: e.target.value }))}
+                  style={{ width: "100%", padding: "10px 14px", borderRadius: 10, border: "1.5px solid #E5E7EB", fontSize: 14, outline: "none", background: "#fff", cursor: "pointer", fontFamily: "'DM Sans', sans-serif", boxSizing: "border-box" }}
+                >
+                  <option value="">Pilih kategori...</option>
+                  {Object.keys(categoryColors).map(cat => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Tanggal Pembayaran */}
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 6, textTransform: "uppercase", letterSpacing: 0.5 }}>
+                  Tanggal Pembayaran
+                </label>
+                <input
+                  type="date"
+                  value={editForm.duDate}
+                  onChange={e => setEditForm(f => ({ ...f, duDate: e.target.value }))}
+                  style={{ width: "100%", padding: "10px 14px", borderRadius: 10, border: "1.5px solid #E5E7EB", fontSize: 14, outline: "none", fontFamily: "'DM Sans', sans-serif", boxSizing: "border-box" }}
+                />
+              </div>
+
+              {/* Harga */}
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 6, textTransform: "uppercase", letterSpacing: 0.5 }}>
+                  Harga (Rp)
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  value={editForm.price}
+                  onChange={e => setEditForm(f => ({ ...f, price: e.target.value }))}
+                  onKeyDown={e => {
+                    if (e.key === "-" || e.key === "e" || e.key === "E" || e.key === "+") e.preventDefault();
+                  }}
+                  style={{ width: "100%", padding: "10px 14px", borderRadius: 10, border: "1.5px solid #E5E7EB", fontSize: 14, outline: "none", fontFamily: "'DM Sans', sans-serif", boxSizing: "border-box" }}
+                />
+              </div>
+
+              {/* Error */}
+              {editError && (
+                <div style={{ background: "#FEE2E2", color: "#991B1B", borderRadius: 8, padding: "10px 14px", fontSize: 13 }}>
+                  {editError}
+                </div>
+              )}
+
+              {/* Tombol Aksi */}
+              <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
+                <button
+                  onClick={() => setShowEditModal(false)}
+                  style={{ flex: 1, padding: "11px", borderRadius: 10, border: "1.5px solid #E5E7EB", background: "#fff", color: "#374151", fontWeight: 600, fontSize: 14, cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}
+                >
+                  Batal
+                </button>
+                <button
+                  onClick={handleEditSubmit}
+                  disabled={editLoading}
+                  style={{ flex: 1, padding: "11px", borderRadius: 10, border: "none", background: editLoading ? "#C4B5FD" : "#7C3AED", color: "#fff", fontWeight: 700, fontSize: 14, cursor: editLoading ? "not-allowed" : "pointer", fontFamily: "'DM Sans', sans-serif" }}
+                >
+                  {editLoading ? "Menyimpan..." : "Update"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Add Subscription Modal */}
       {showAddModal && (
