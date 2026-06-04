@@ -35,14 +35,11 @@ public class reportService {
     public reportEntity getMonthlyReport(String userId, int month, int year) {
         userEntity user = getUserOrThrow(userId);
 
-        java.time.LocalDate targetMonthEnd = java.time.LocalDate.of(year, month, 1)
-                .with(java.time.temporal.TemporalAdjusters.lastDayOfMonth());
-
         List<subscriptionEntity> filteredSubscriptions = subscriptionRepository.findByUserIdOrderByDuDate(userId)
                 .stream()
                 .filter(subscription -> subscription.isActive())
                 .filter(subscription -> subscription.getDuDate() != null)
-                .filter(subscription -> !subscription.getDuDate().isAfter(targetMonthEnd))
+                .filter(subscription -> subscription.getDuDate().getMonthValue() == month && subscription.getDuDate().getYear() == year)
                 .toList();
 
         return saveOrUpdateReport(user, month, year, filteredSubscriptions);
@@ -52,13 +49,11 @@ public class reportService {
     public reportEntity getYearlyReport(String userId, int year) {
         userEntity user = getUserOrThrow(userId);
 
-        java.time.LocalDate targetYearEnd = java.time.LocalDate.of(year, 12, 31);
-
         List<subscriptionEntity> filteredSubscriptions = subscriptionRepository.findByUserIdOrderByDuDate(userId)
                 .stream()
                 .filter(subscription -> subscription.isActive())
                 .filter(subscription -> subscription.getDuDate() != null)
-                .filter(subscription -> !subscription.getDuDate().isAfter(targetYearEnd))
+                .filter(subscription -> subscription.getDuDate().getYear() == year)
                 .toList();
 
         // month = 0 artinya laporan tahunan

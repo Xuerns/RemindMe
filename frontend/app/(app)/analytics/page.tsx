@@ -22,7 +22,7 @@ interface SubscriptionEntity {
   price: number;
   duDate: string;
   category: string;
-  isActive: boolean;
+  active: boolean;
   status: "PAID" | "UPCOMING";
 }
 
@@ -116,7 +116,12 @@ export default function AnalyticsPage() {
       : `${API_BASE}/monthly?userId=${userId}&month=${selectedMonth}&year=${selectedYear}`;
 
     try {
-      const res = await fetch(url);
+      const token = localStorage.getItem("token");
+      const res = await fetch(url, {
+        headers: {
+          "Authorization": `Bearer ${token}`
+        }
+      });
       if (!res.ok) {
         console.warn("Gagal mengambil data dari API backend");
         setReportData(null);
@@ -321,7 +326,12 @@ export default function AnalyticsPage() {
     const url = `${API_BASE}/export-pdf?userId=${userId}&month=${selectedMonth}&year=${selectedYear}`;
     
     try {
-      const res = await fetch(url);
+      const token = localStorage.getItem("token");
+      const res = await fetch(url, {
+        headers: {
+          "Authorization": `Bearer ${token}`
+        }
+      });
       if (!res.ok) {
         alert("Fitur ekspor PDF gagal karena API backend offline atau bermasalah.");
         return;
