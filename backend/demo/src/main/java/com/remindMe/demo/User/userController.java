@@ -18,6 +18,13 @@ public class userController {
         return userService.getUserProfile(id);
     }
 
+    // GET PROFILE BY EMAIL
+    @GetMapping("/by-email")
+    public userEntity getProfileByEmail(@RequestParam String email) {
+        return userService.getUserByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User dengan email " + email + " tidak ditemukan"));
+    }
+
     // UPDATE PROFILE
     @PutMapping("/{id}")
     public userEntity updateProfile(

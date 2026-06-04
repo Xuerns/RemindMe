@@ -1,89 +1,118 @@
 package com.remindMe.demo.report;
 
+import com.remindMe.demo.User.userEntity;
+import com.remindMe.demo.User.userRepository;
 import com.remindMe.demo.subscription.subscriptionEntity;
 import com.remindMe.demo.subscription.subscriptionRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.io.File;
-import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 @Service
 public class reportService {
 
     private final subscriptionRepository subscriptionRepository;
+    private final reportRepository reportRepository;
+    private final userRepository userRepository;
 
-    public reportService(subscriptionRepository subscriptionRepository) {
+    public reportService(
+            subscriptionRepository subscriptionRepository,
+            reportRepository reportRepository,
+            userRepository userRepository
+    ) {
         this.subscriptionRepository = subscriptionRepository;
+        this.reportRepository = reportRepository;
+        this.userRepository = userRepository;
     }
 
+    @Transactional
     public reportEntity getMonthlyReport(String userId, int month, int year) {
-        List<subscriptionEntity> allSubscriptions = subscriptionRepository.findByUserId(userId);
+        userEntity user = getUserOrThrow(userId);
 
-        List<subscriptionEntity> filteredSubscriptions = allSubscriptions.stream()
+        java.time.LocalDate targetMonthEnd = java.time.LocalDate.of(year, month, 1)
+                .with(java.time.temporal.TemporalAdjusters.lastDayOfMonth());
+
+        List<subscriptionEntity> filteredSubscriptions = subscriptionRepository.findByUserIdOrderByDuDate(userId)
+                .stream()
                 .filter(subscription -> subscription.isActive())
                 .filter(subscription -> subscription.getDuDate() != null)
-                .filter(subscription -> subscription.getDuDate().getMonthValue() == month)
-                .filter(subscription -> subscription.getDuDate().getYear() == year)
+                .filter(subscription -> !subscription.getDuDate().isAfter(targetMonthEnd))
                 .toList();
 
-        reportEntity report = new reportEntity();
-        report.setUserId(userId);
+        return saveOrUpdateReport(user, month, year, filteredSubscriptions);
+    }
+
+    @Transactional
+    public reportEntity getYearlyReport(String userId, int year) {
+        userEntity user = getUserOrThrow(userId);
+
+        java.time.LocalDate targetYearEnd = java.time.LocalDate.of(year, 12, 31);
+
+        List<subscriptionEntity> filteredSubscriptions = subscriptionRepository.findByUserIdOrderByDuDate(userId)
+                .stream()
+                .filter(subscription -> subscription.isActive())
+                .filter(subscription -> subscription.getDuDate() != null)
+                .filter(subscription -> !subscription.getDuDate().isAfter(targetYearEnd))
+                .toList();
+
+        // month = 0 artinya laporan tahunan
+        return saveOrUpdateReport(user, 0, year, filteredSubscriptions);
+    }
+
+    @Transactional
+    public double calcMonthlyTotal(String userId, int month, int year) {
+        return getMonthlyReport(userId, month, year).calcMonthlyTotal();
+    }
+
+    @Transactional
+    public List<String> getSavingsTips(String userId, int month, int year) {
+        return getMonthlyReport(userId, month, year).getSavingsTips();
+    }
+
+    @Transactional
+    public File exportPdf(String userId) {
+        int currentYear = java.time.LocalDate.now().getYear();
+        int currentMonth = java.time.LocalDate.now().getMonthValue();
+        return exportPdf(userId, currentMonth, currentYear);
+    }
+
+    @Transactional
+    public File exportPdf(String userId, int month, int year) {
+        reportEntity report = getMonthlyReport(userId, month, year);
+        return report.exportToPdf();
+    }
+
+    private userEntity getUserOrThrow(String userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "User dengan ID " + userId + " tidak ditemukan."
+                ));
+    }
+
+    private reportEntity saveOrUpdateReport(
+            userEntity user,
+            int month,
+            int year,
+            List<subscriptionEntity> subscriptions
+    ) {
+        reportEntity report = reportRepository
+                .findByUserIdAndMonthAndYear(user.getId(), month, year)
+                .orElseGet(reportEntity::new);
+
+        report.setUserId(user.getId());
+        report.setUser(user);
         report.setMonth(month);
         report.setYear(year);
-        report.setGeneratedAt(LocalDate.now());
-        report.setSubscriptions(filteredSubscriptions);
+        report.setGeneratedAt(new Date());
+        report.setSubscriptions(new ArrayList<>(subscriptions));
 
-        return report;
-    }
-
-    public reportEntity getYearlyReport(String userId, int year) {
-        List<subscriptionEntity> allSubscriptions = subscriptionRepository.findByUserId(userId);
-
-        List<subscriptionEntity> filteredSubscriptions = allSubscriptions.stream()
-                .filter(subscription -> subscription.isActive())
-                .filter(subscription -> subscription.getDuDate() != null)
-                .filter(subscription -> subscription.getDuDate().getYear() == year)
-                .toList();
-
-        reportEntity report = new reportEntity();
-        report.setUserId(userId);
-        report.setMonth(0); // 0 artinya laporan tahunan
-        report.setYear(year);
-        report.setGeneratedAt(LocalDate.now());
-        report.setSubscriptions(filteredSubscriptions);
-
-        return report;
-    }
-
-    public double calcMonthlyTotal(String userId, int month, int year) {
-        reportEntity report = getMonthlyReport(userId, month, year);
-        return report.calcMonthlyTotal();
-    }
-
-    public List<String> getSavingsTips(String userId) {
-        List<subscriptionEntity> allSubscriptions = subscriptionRepository.findByUserId(userId);
-
-        List<subscriptionEntity> activeSubscriptions = allSubscriptions.stream()
-                .filter(subscription -> subscription.isActive())
-                .toList();
-
-        reportEntity report = new reportEntity();
-        report.setUserId(userId);
-        report.setMonth(0);
-        report.setYear(LocalDate.now().getYear());
-        report.setGeneratedAt(LocalDate.now());
-        report.setSubscriptions(activeSubscriptions);
-
-        return report.getSavingsTips();
-    }
-
-    public File exportPdf(String userId) {
-        throw new ResponseStatusException(
-                HttpStatus.NOT_IMPLEMENTED,
-                "Fitur export PDF belum diimplementasikan."
-        );
+        return reportRepository.save(report);
     }
 }

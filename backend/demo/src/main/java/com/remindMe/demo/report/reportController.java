@@ -1,10 +1,13 @@
 package com.remindMe.demo.report;
 
-import org.springframework.http.HttpStatus;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import java.io.File;
 
 @RestController
 @RequestMapping("/api/reports")
@@ -18,44 +21,80 @@ public class reportController {
     }
 
     @GetMapping("/monthly")
-    public reportEntity getMonthlyReport(
+    public ResponseEntity<?> getMonthlyReport(
             @RequestParam String userId,
             @RequestParam int month,
             @RequestParam int year
     ) {
-        return reportService.getMonthlyReport(userId, month, year);
+        if (month < 1 || month > 12) {
+            return ResponseEntity.badRequest().body("Bulan harus antara 1-12.");
+        }
+        if (year < 1) {
+            return ResponseEntity.badRequest().body("Tahun tidak valid.");
+        }
+        return ResponseEntity.ok(reportService.getMonthlyReport(userId, month, year));
     }
 
     @GetMapping("/yearly")
-    public reportEntity getYearlyReport(
+    public ResponseEntity<?> getYearlyReport(
             @RequestParam String userId,
             @RequestParam int year
     ) {
-        return reportService.getYearlyReport(userId, year);
+        if (year < 1) {
+            return ResponseEntity.badRequest().body("Tahun tidak valid.");
+        }
+        return ResponseEntity.ok(reportService.getYearlyReport(userId, year));
     }
 
     @GetMapping("/monthly-total")
-    public double calcMonthlyTotal(
+    public ResponseEntity<?> calcMonthlyTotal(
             @RequestParam String userId,
             @RequestParam int month,
             @RequestParam int year
     ) {
-        return reportService.calcMonthlyTotal(userId, month, year);
+        if (month < 1 || month > 12) {
+            return ResponseEntity.badRequest().body("Bulan harus antara 1-12.");
+        }
+        if (year < 1) {
+            return ResponseEntity.badRequest().body("Tahun tidak valid.");
+        }
+        return ResponseEntity.ok(reportService.calcMonthlyTotal(userId, month, year));
     }
 
     @GetMapping("/savings-tips")
-    public List<String> getSavingsTips(
-            @RequestParam String userId
+    public ResponseEntity<?> getSavingsTips(
+            @RequestParam String userId,
+            @RequestParam int month,
+            @RequestParam int year
     ) {
-        return reportService.getSavingsTips(userId);
+        if (month < 1 || month > 12) {
+            return ResponseEntity.badRequest().body("Bulan harus antara 1-12.");
+        }
+        if (year < 1) {
+            return ResponseEntity.badRequest().body("Tahun tidak valid.");
+        }
+        return ResponseEntity.ok(reportService.getSavingsTips(userId, month, year));
     }
 
     @GetMapping("/export-pdf")
-    public ResponseEntity<String> exportPdf(
-            @RequestParam String userId
+    public ResponseEntity<Resource> exportPdf(
+            @RequestParam String userId,
+            @RequestParam int month,
+            @RequestParam int year
     ) {
-        return ResponseEntity
-                .status(HttpStatus.NOT_IMPLEMENTED)
-                .body("Fitur export PDF belum diimplementasikan.");
+        if (month < 1 || month > 12) {
+            return ResponseEntity.badRequest().build();
+        }
+        if (year < 1) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        File file = reportService.exportPdf(userId, month, year);
+        Resource resource = new FileSystemResource(file);
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_PDF)
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=report-" + userId + "-" + month + "-" + year + ".pdf")
+                .body(resource);
     }
 }

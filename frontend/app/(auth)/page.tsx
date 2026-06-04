@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { jwtDecode } from "jwt-decode";
 
 
 interface ValidationResult {
@@ -193,7 +194,8 @@ export default function LoginPage() {
       setIsSubmitting(true);
       
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
+        const apiBase = process.env.NEXT_PUBLIC_API_URL || "/api";
+        const res = await fetch(`${apiBase}/auth/login`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email, password }),
@@ -207,6 +209,23 @@ export default function LoginPage() {
         const response = await res.json();
         localStorage.setItem("token", response.token);
         localStorage.setItem("id", response.id);
+
+        // Ambil dan simpan userId secara dinamis berdasarkan email dari token JWT
+        try {
+          const decoded: any = jwtDecode(response.token);
+          const userEmail = decoded.sub;
+          if (userEmail) {
+            const userRes = await fetch(`${apiBase}/users/by-email?email=${encodeURIComponent(userEmail)}`);
+            if (userRes.ok) {
+              const userData = await userRes.json();
+              if (userData && userData.id) {
+                localStorage.setItem("userId", userData.id);
+              }
+            }
+          }
+        } catch (decodeErr) {
+          console.error("Gagal mendecode token JWT atau mendapatkan user ID:", decodeErr);
+        }
 
         router.push("/dashboard");
       } catch (err) {
