@@ -130,13 +130,15 @@ export default function SubscriptionPage() {
   });
   const [editLoading, setEditLoading] = useState<boolean>(false);
   const [editError, setEditError] = useState<string>("");
+  const [userType, setUserType] = useState<String>("");
+  const [showUpgradeModal, setShowUpgradeModal] = useState<boolean>(false);
 
   async function fetchAll(): Promise<void> {
     setLoading(true);
     const USER_ID = localStorage.getItem("id");
     const token = localStorage.getItem("token");
     try {
-      const [top3Res, allRes, totalRes, countRes] = await Promise.all([
+      const [top3Res, allRes, totalRes, countRes, userRes] = await Promise.all([
         fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/api/subscriptions/user/${USER_ID}/top3`,
           {
@@ -161,15 +163,23 @@ export default function SubscriptionPage() {
             headers: { Authorization: `Bearer ${token}` },
           },
         ),
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users/${USER_ID}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          },
+        ),
       ]);
       const top3: SubscriptionEntity[] = await top3Res.json();
       const all: SubscriptionEntity[] = await allRes.json();
       const total: number = await totalRes.json();
       const count: number = await countRes.json();
+      const user = userRes.ok ? await userRes.json() : null;
+
       setTopSubs(top3);
       setAllSubs(all);
       setTotalMonthly(total);
       setTotalCount(count);
+      if (user) setUserType(user.type);
     } catch (e) {
       console.error(e);
     }
@@ -187,7 +197,7 @@ export default function SubscriptionPage() {
           method: "PATCH",
           headers: {
             Authorization: `Bearer ${token}`,
-            
+
           },
         },
       );
@@ -461,14 +471,14 @@ export default function SubscriptionPage() {
                         title="Edit"
                         style={{ background: "none", border: "none", cursor: "pointer", color: "#6B7280", padding: 4, borderRadius: 6 }}
                       >
-                        <Pencil size={16}/>
+                        <Pencil size={16} />
                       </button>
                       <button
                         onClick={() => setDeleteConfirm({ id: sub.id, name: sub.name })}
                         title="Delete"
                         style={{ background: "none", border: "none", cursor: "pointer", color: "#EF4444", padding: 4, borderRadius: 6 }}
                       >
-                        <Trash2 size={16}/>
+                        <Trash2 size={16} />
                       </button>
                     </div>
                   </td>
@@ -542,7 +552,14 @@ export default function SubscriptionPage() {
 
       {/* FAB Add Button */}
       <button
-        onClick={() => { setShowAddModal(true); setAddError(""); }}
+        onClick={() => {
+          if (userType === "REGULAR" && totalCount >= 5) {
+            setShowUpgradeModal(true);
+          } else {
+            setShowAddModal(true);
+            setAddError("");
+          }
+        }}
         title="Add new subscription"
         style={{
           position: "fixed", bottom: 32, right: 32,
@@ -905,6 +922,61 @@ export default function SubscriptionPage() {
                   {addLoading ? "Menyimpan..." : "Simpan"}
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Upgrade Modal */}
+      {showUpgradeModal && (
+        <div
+          onClick={() => setShowUpgradeModal(false)}
+          style={{
+            position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            zIndex: 1000, backdropFilter: "blur(2px)",
+          }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{
+              background: "#fff", borderRadius: 20, padding: "32px",
+              width: "100%", maxWidth: 400, boxShadow: "0 20px 60px rgba(0,0,0,0.15)",
+              fontFamily: "'DM Sans', sans-serif", textAlign: "center",
+            }}
+          >
+            <div style={{ fontSize: 48, marginBottom: 16 }}>⭐</div>
+            <div style={{ fontWeight: 800, fontSize: 20, color: "#1A1523", marginBottom: 8 }}>
+              Batas Subscription Tercapai
+            </div>
+            <div style={{ fontSize: 14, color: "#6B7280", marginBottom: 8 }}>
+              Kamu sudah mencapai batas <span style={{ fontWeight: 700, color: "#1A1523" }}>5 subscription</span> untuk akun reguler.
+            </div>
+            <div style={{ fontSize: 14, color: "#6B7280", marginBottom: 24 }}>
+              Upgrade ke Premium untuk menambahkan subscription tanpa batas!
+            </div>
+            <div style={{ display: "flex", gap: 10 }}>
+              <button
+                onClick={() => setShowUpgradeModal(false)}
+                style={{
+                  flex: 1, padding: "11px", borderRadius: 10, border: "1.5px solid #E5E7EB",
+                  background: "#fff", color: "#374151", fontWeight: 600, fontSize: 14,
+                  cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
+                }}
+              >
+                Nanti Saja
+              </button>
+              <button
+                onClick={() => window.location.href = "/upgrade"}
+                style={{
+                  flex: 1, padding: "11px", borderRadius: 10, border: "none",
+                  background: "linear-gradient(135deg, #7C3AED, #4C1D95)",
+                  color: "#fff", fontWeight: 700, fontSize: 14,
+                  cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
+                }}
+              >
+                Upgrade Sekarang
+              </button>
             </div>
           </div>
         </div>
