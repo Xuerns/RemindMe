@@ -68,6 +68,7 @@ public abstract class userEntity {
     private List<reportEntity> userReports = new ArrayList<>();
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    @JsonIgnore
     private List<notificationEntity> userNotifications = new ArrayList<>();
 
     public String getType() {

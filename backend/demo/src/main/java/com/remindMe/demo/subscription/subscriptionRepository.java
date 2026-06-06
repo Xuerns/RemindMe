@@ -29,4 +29,4 @@ public interface subscriptionRepository extends JpaRepository<subscriptionEntity
 
     Optional<subscriptionEntity> findByName(String name); // Optional Agar aplikasi tidak langsung crash jika data tidak
                                                           // ditemukan
-}
+}   

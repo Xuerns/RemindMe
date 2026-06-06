@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 
 import com.remindMe.demo.subscription.DTO.subscriptionRequest;
 import com.remindMe.demo.User.userRepository;
+import com.remindMe.demo.notification.notificationService;
 import com.remindMe.demo.User.userEntity;
 
 import java.util.UUID; //untuk generate id yang varchar(255)
@@ -18,6 +19,7 @@ import java.util.List;
 public class subscriptionService {
     private final subscriptionRepository subscriptionRepo;
     private final userRepository userRepo;
+    private final notificationService notificationService;
 
     public void updateSubscription(String id, subscriptionRequest request) {
         subscriptionEntity existSub = subscriptionRepo.findById(id)
@@ -29,6 +31,7 @@ public class subscriptionService {
         existSub.setDuDate(request.getDuDate());
         existSub.setStatus(subscriptionEntity.statusSubs.valueOf(request.getStatus()));
         subscriptionRepo.save(existSub);
+        notificationService.scheduleReminder(existSub);
     }
 
     public List<subscriptionEntity> getAll(String userId) {
@@ -75,7 +78,10 @@ public class subscriptionService {
 
         userEntity user = userRepo.findById(request.getUserId()).orElseThrow(() -> new RuntimeException("User tidak ditemukan"));
         sub.setUser(user);
-        return subscriptionRepo.save(sub);
+        // return subscriptionRepo.save(sub);
+        subscriptionEntity saved = subscriptionRepo.save(sub); 
+        notificationService.scheduleReminder(saved);           
+        return saved;
     }
 
     public String deleteSubscription(String id) {

@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.remindMe.demo.User.userEntity;
@@ -62,5 +63,6 @@ public class subscriptionEntity {
 
     // ONE TO MANY → notifications
     @OneToMany(mappedBy = "subscription")
+    @JsonIgnore
     private List<notificationEntity> notifications;
 }
