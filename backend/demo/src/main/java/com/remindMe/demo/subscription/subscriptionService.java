@@ -9,9 +9,14 @@ import com.remindMe.demo.subscription.DTO.subscriptionRequest;
 import com.remindMe.demo.User.userRepository;
 import com.remindMe.demo.notification.notificationService;
 import com.remindMe.demo.User.userEntity;
+import com.remindMe.demo.history.historyService;
+import com.remindMe.demo.history.historyEntity;
+import com.remindMe.demo.history.historyRepository;
 
 import java.util.UUID; //untuk generate id yang varchar(255)
 import java.util.List;
+import java.time.LocalDate;
+
 
 @Service // Menandakan bahwa class ini adalah Service component di Spring Boot
 @RequiredArgsConstructor // Lombok: otomatis membuat constructor untuk inject repositor
@@ -20,6 +25,7 @@ public class subscriptionService {
     private final subscriptionRepository subscriptionRepo;
     private final userRepository userRepo;
     private final notificationService notificationService;
+    private final historyService historyService;
 
     public void updateSubscription(String id, subscriptionRequest request) {
         subscriptionEntity existSub = subscriptionRepo.findById(id)
@@ -73,7 +79,7 @@ public class subscriptionService {
     // method untuk menambahkan subscription
     public subscriptionEntity addSubscription(subscriptionRequest request) {
         subscriptionEntity sub = new subscriptionEntity();
-        
+
         sub.setName(request.getName());
         sub.setCategory(request.getCategory());
         sub.setPrice(request.getPrice());
@@ -89,7 +95,37 @@ public class subscriptionService {
             notificationService.scheduleReminder(saved);
         }catch(Exception E){
 
-        }           
+        }     
+
+        try{
+            historyEntity history = new historyEntity();
+            history.setName(saved.getName());
+            history.setCategory(saved.getCategory());
+            history.setPrice(saved.getPrice());
+            
+            Localdate paymentDate = saved.getDuDate();
+            history.setStartDate(paymentDate);
+
+            LocalDate calculatedEndDate = paymentDate;
+            if (saved.getPeriod() != null){
+                String periodName = saved.getPeriod().name();
+                if (periodName.contains("THREE")){
+                    calculatedEndDate = paymentDate.plusMonths(3);
+                }else if (periodName.contains("SIX")){
+                    calculatedEndDate = paymentDate.plusMonths(6);
+                }else if (periodName.contains("TWELVE")){
+                    calculatedEndDate = paymentDate.plusMonths(12);
+                }
+            }
+            history.setEndDate(calculatedEndDate);
+            history.setStatus(historyEntity.statusHistory.ACTIVE);
+            history.setUser(user);
+
+            historyService.addHistory(history);
+        } catch(Exception e){
+            System.out.println("Gagal menyimpan riwayat: " + e.getMessage());
+        }
+
         return saved;
     }
 

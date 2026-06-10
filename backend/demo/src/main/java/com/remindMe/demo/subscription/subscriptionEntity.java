@@ -31,7 +31,7 @@ public class subscriptionEntity {
     }
 
     public enum periodSubs{
-        THREE MONTH,
+        THREE_MONTH,
         SIX_MONTH,
         TWELVE_MONTH
     }
