@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.File;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/reports")
@@ -20,6 +21,15 @@ public class reportController {
         this.reportService = reportService;
     }
 
+    @GetMapping("/access")
+    public ResponseEntity<?> checkAnalyticsAccess(@RequestParam String userId) {
+        boolean canAccess = reportService.canAccessAnalytics(userId);
+
+        return ResponseEntity.ok(Map.of(
+                "canAccessAnalytics", canAccess
+        ));
+    }
+
     @GetMapping("/monthly")
     public ResponseEntity<?> getMonthlyReport(
             @RequestParam String userId,
@@ -29,9 +39,11 @@ public class reportController {
         if (month < 1 || month > 12) {
             return ResponseEntity.badRequest().body("Bulan harus antara 1-12.");
         }
+
         if (year < 1) {
             return ResponseEntity.badRequest().body("Tahun tidak valid.");
         }
+
         return ResponseEntity.ok(reportService.getMonthlyReport(userId, month, year));
     }
 
@@ -43,6 +55,7 @@ public class reportController {
         if (year < 1) {
             return ResponseEntity.badRequest().body("Tahun tidak valid.");
         }
+
         return ResponseEntity.ok(reportService.getYearlyReport(userId, year));
     }
 
@@ -55,9 +68,11 @@ public class reportController {
         if (month < 1 || month > 12) {
             return ResponseEntity.badRequest().body("Bulan harus antara 1-12.");
         }
+
         if (year < 1) {
             return ResponseEntity.badRequest().body("Tahun tidak valid.");
         }
+
         return ResponseEntity.ok(reportService.calcMonthlyTotal(userId, month, year));
     }
 
@@ -70,9 +85,11 @@ public class reportController {
         if (month < 1 || month > 12) {
             return ResponseEntity.badRequest().body("Bulan harus antara 1-12.");
         }
+
         if (year < 1) {
             return ResponseEntity.badRequest().body("Tahun tidak valid.");
         }
+
         return ResponseEntity.ok(reportService.getSavingsTips(userId, month, year));
     }
 
@@ -85,6 +102,7 @@ public class reportController {
         if (month < 1 || month > 12) {
             return ResponseEntity.badRequest().build();
         }
+
         if (year < 1) {
             return ResponseEntity.badRequest().build();
         }
@@ -94,7 +112,10 @@ public class reportController {
 
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_PDF)
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=report-" + userId + "-" + month + "-" + year + ".pdf")
+                .header(
+                        HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename=report-" + userId + "-" + month + "-" + year + ".pdf"
+                )
                 .body(resource);
     }
 }

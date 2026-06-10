@@ -31,15 +31,22 @@ public class reportService {
         this.userRepository = userRepository;
     }
 
+    public boolean canAccessAnalytics(String userId) {
+        userEntity user = getUserOrThrow(userId);
+        return user.canAccessAnalytics();
+    }
+
     @Transactional
     public reportEntity getMonthlyReport(String userId, int month, int year) {
         userEntity user = getUserOrThrow(userId);
+        validateAnalyticsAccess(user);
 
         List<subscriptionEntity> filteredSubscriptions = subscriptionRepository.findByUserIdOrderByDuDate(userId)
                 .stream()
                 .filter(subscription -> subscription.isActive())
                 .filter(subscription -> subscription.getDuDate() != null)
-                .filter(subscription -> subscription.getDuDate().getMonthValue() == month && subscription.getDuDate().getYear() == year)
+                .filter(subscription -> subscription.getDuDate().getMonthValue() == month
+                        && subscription.getDuDate().getYear() == year)
                 .toList();
 
         return saveOrUpdateReport(user, month, year, filteredSubscriptions);
@@ -48,6 +55,7 @@ public class reportService {
     @Transactional
     public reportEntity getYearlyReport(String userId, int year) {
         userEntity user = getUserOrThrow(userId);
+        validateAnalyticsAccess(user);
 
         List<subscriptionEntity> filteredSubscriptions = subscriptionRepository.findByUserIdOrderByDuDate(userId)
                 .stream()
@@ -74,11 +82,15 @@ public class reportService {
     public File exportPdf(String userId) {
         int currentYear = java.time.LocalDate.now().getYear();
         int currentMonth = java.time.LocalDate.now().getMonthValue();
+
         return exportPdf(userId, currentMonth, currentYear);
     }
 
     @Transactional
     public File exportPdf(String userId, int month, int year) {
+        userEntity user = getUserOrThrow(userId);
+        validateExportAccess(user);
+
         reportEntity report = getMonthlyReport(userId, month, year);
         return report.exportToPdf();
     }
@@ -89,6 +101,24 @@ public class reportService {
                         HttpStatus.NOT_FOUND,
                         "User dengan ID " + userId + " tidak ditemukan."
                 ));
+    }
+
+    private void validateAnalyticsAccess(userEntity user) {
+        if (!user.canAccessAnalytics()) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "Fitur Analytics hanya tersedia untuk Premium User."
+            );
+        }
+    }
+
+    private void validateExportAccess(userEntity user) {
+        if (!user.canExportReport()) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "Export report hanya tersedia untuk Premium User."
+            );
+        }
     }
 
     private reportEntity saveOrUpdateReport(
