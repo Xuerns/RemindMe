@@ -150,7 +150,7 @@ const PREMIUM_FEATURES = [
   { text: "Reminder otomatis", available: true },
   { text: "Halaman Analytics lengkap", available: true },
   { text: "Dukungan prioritas", available: true },
-  { text: "Ekspor data CSV", available: true },
+  { text: "Ekspor data PDF", available: true },
 ];
 
 function Confetti() {

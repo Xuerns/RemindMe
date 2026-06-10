@@ -12,6 +12,7 @@ import {
   CreditCard,
   ChevronDown
 } from "lucide-react";
+import useCheck from "@/store/useCheck";
 
 const API_BASE = "http://localhost:8080/api/reports";
 
@@ -72,6 +73,8 @@ function getAuthHeaders() {
 
 export default function AnalyticsPage() {
   const router = useRouter();
+  const status = useCheck((state) => state.check);
+  const checkPremium = useCheck((state) => state.changeStatus);
 
   // State Manajemen
   const [viewMode, setViewMode] = useState<"monthly" | "yearly">("monthly");
@@ -82,7 +85,7 @@ export default function AnalyticsPage() {
   const [reportData, setReportData] = useState<ReportData | null>(null);
 
   // Premium Lock State
-  const [analyticsLocked, setAnalyticsLocked] = useState<boolean>(false);
+  const [analyticsLocked, setAnalyticsLocked] = useState<"REGULER" | "PREMIUM">("REGULER");
   const [checkingAccess, setCheckingAccess] = useState<boolean>(true);
 
   // CDN Chart.js Load State
@@ -122,14 +125,19 @@ export default function AnalyticsPage() {
     if (!checkToken()) {
       router.push("/");
     }
-  }, [router]);
+    verifyPremium();
+  }, [router, status]);
 
   const checkAnalyticsAccess = useCallback(async () => {
     const userId = getCurrentUserId();
     const token = getToken();
 
     if (!userId || !token) {
-      setAnalyticsLocked(true);
+      if (status !== "PREMIUM") {
+        setAnalyticsLocked("REGULER");
+      } else {
+        setAnalyticsLocked("PREMIUM");
+      }
       setCheckingAccess(false);
       return false;
     }
@@ -141,24 +149,50 @@ export default function AnalyticsPage() {
       });
 
       if (!res.ok) {
-        setAnalyticsLocked(true);
+        if (status !== "PREMIUM") {
+          setAnalyticsLocked("REGULER");
+        } else {
+          setAnalyticsLocked("PREMIUM");
+        }
+        
         setCheckingAccess(false);
         return false;
       }
 
-      const data = await res.json();
-      const canAccess = Boolean(data.canAccessAnalytics);
-
-      setAnalyticsLocked(!canAccess);
+      if (status !== "PREMIUM") {
+        setAnalyticsLocked("REGULER");
+      } else {
+        setAnalyticsLocked("PREMIUM");
+      }
       setCheckingAccess(false);
-
-      return canAccess;
     } catch {
-      setAnalyticsLocked(true);
+      if (status !== "PREMIUM") {
+        setAnalyticsLocked("REGULER");
+      } else {
+        setAnalyticsLocked("PREMIUM");
+      }
       setCheckingAccess(false);
       return false;
     }
   }, []);
+
+ const verifyPremium = async () => {
+      const userId = getCurrentUserId();
+      const token = getToken();
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/users/${userId}/check`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          },
+        );
+
+        const data = await res.json();
+        if (data === true) {
+            checkPremium("PREMIUM");
+        }
+      };
 
   // 3. Mengambil Data Laporan dari Backend
   const fetchReportData = useCallback(async () => {
@@ -466,7 +500,7 @@ export default function AnalyticsPage() {
         overflow: "hidden"
       }}
     >
-      <div className={analyticsLocked && !checkingAccess ? "pointer-events-none select-none blur-sm transition duration-300" : "transition duration-300"}>
+      <div className={analyticsLocked !== "PREMIUM" && !checkingAccess ? "pointer-events-none select-none blur-sm transition duration-300" : "transition duration-300"}>
         <link
           href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap"
           rel="stylesheet"
@@ -743,7 +777,7 @@ export default function AnalyticsPage() {
         </div>
       </div>
 
-      {analyticsLocked && !checkingAccess && (
+      {analyticsLocked !== "PREMIUM" && !checkingAccess && (
         <div className="absolute inset-0 z-50 flex items-center justify-center bg-white/45 backdrop-blur-[2px]">
           <div className="mx-4 max-w-md rounded-[28px] border border-slate-100 bg-white p-10 text-center shadow-2xl">
             <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-slate-100 text-4xl">
