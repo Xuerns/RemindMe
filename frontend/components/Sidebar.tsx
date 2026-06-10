@@ -21,12 +21,11 @@ import {
    Navigation Config
    ══════════════════════════════════════════ */
 const navItems = [
+  { label: "Profile", href: "/profile", icon: User },
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "Subscriptions", href: "/subscriptions", icon: CreditCard },
   { label: "Notifications", href: "/notifications", icon: Bell },
   { label: "Analytics", href: "/analytics", icon: BarChart3 },
-  { label: "Profile", href: "/profile", icon: User },
-  { label: "Settings", href: "/settings", icon: Settings },
 ];
 
 const MOBILE_BP = 768;
