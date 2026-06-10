@@ -59,6 +59,7 @@ public class subscriptionEntity {
 
     // MANY TO MANY (report_subscriptions)
     @ManyToMany(mappedBy = "subscriptions")
+    @JsonIgnore
     private List<reportEntity> reports;
 
     // ONE TO MANY → notifications

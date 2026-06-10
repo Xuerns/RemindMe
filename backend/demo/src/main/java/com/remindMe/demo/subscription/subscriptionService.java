@@ -31,7 +31,11 @@ public class subscriptionService {
         existSub.setDuDate(request.getDuDate());
         existSub.setStatus(subscriptionEntity.statusSubs.valueOf(request.getStatus()));
         subscriptionRepo.save(existSub);
-        notificationService.scheduleReminder(existSub);
+        try{
+            notificationService.scheduleReminder(existSub);
+        }catch(Exception e){
+
+        }
     }
 
     public List<subscriptionEntity> getAll(String userId) {
@@ -79,8 +83,12 @@ public class subscriptionService {
         userEntity user = userRepo.findById(request.getUserId()).orElseThrow(() -> new RuntimeException("User tidak ditemukan"));
         sub.setUser(user);
         // return subscriptionRepo.save(sub);
-        subscriptionEntity saved = subscriptionRepo.save(sub); 
-        notificationService.scheduleReminder(saved);           
+        subscriptionEntity saved = subscriptionRepo.save(sub);
+        try{ 
+            notificationService.scheduleReminder(saved);
+        }catch(Exception E){
+
+        }           
         return saved;
     }
 
