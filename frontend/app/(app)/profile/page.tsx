@@ -15,6 +15,7 @@ export default function ProfilePage() {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [userType, setUserType] = useState("REGULAR");
+  const [subscriptions, setSubscriptions] = useState<any[]>([]);
   
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -26,24 +27,37 @@ export default function ProfilePage() {
       return;
     }
 
-    const fetchProfile = async () => {
+    const fetchData = async () => {
       try {
         const token = localStorage.getItem("token");
         const userId = localStorage.getItem("id");
         
         if (!userId) return;
 
-        const res = await fetch(`${API_URL}/api/users/${userId}`, {
+        // Fetch Profile
+        const resUser = await fetch(`${API_URL}/api/users/${userId}`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
 
-        if (res.ok) {
-          const data = await res.json();
+        if (resUser.ok) {
+          const data = await resUser.json();
           setUsername(data.username || "");
           setEmail(data.email || "");
           setUserType(data.type || "REGULAR");
+        }
+
+        // Fetch Subscriptions
+        const resSubs = await fetch(`${API_URL}/api/subscriptions/user/${userId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (resSubs.ok) {
+          const data = await resSubs.json();
+          setSubscriptions(data || []);
         }
       } catch (err) {
         console.error(err);
@@ -52,7 +66,7 @@ export default function ProfilePage() {
       }
     };
 
-    fetchProfile();
+    fetchData();
   }, []);
 
   const handleSave = async () => {
@@ -70,7 +84,8 @@ export default function ProfilePage() {
         },
         body: JSON.stringify({
           username,
-          email
+          email,
+          type: userType
         }),
       });
 
@@ -85,6 +100,68 @@ export default function ProfilePage() {
       setMessage("An error occurred.");
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  // Dynamic Calculations
+  const activeSubs = subscriptions.filter(s => s.isActive);
+  const activeCount = activeSubs.length;
+  
+  const monthlyCost = activeSubs.reduce((sum, s) => sum + Number(s.price), 0);
+  
+  const renewalCount = subscriptions.filter(s => s.isActive && s.status === "UPCOMING").length;
+
+  // Favorite Category calculation based on frequency
+  const categoryCounts: Record<string, number> = {};
+  activeSubs.forEach(s => {
+    if (s.category) {
+      categoryCounts[s.category] = (categoryCounts[s.category] || 0) + 1;
+    }
+  });
+  let favoriteCategory = "-";
+  let maxCount = 0;
+  for (const [cat, count] of Object.entries(categoryCounts)) {
+    if (count > maxCount) {
+      maxCount = count;
+      favoriteCategory = cat;
+    }
+  }
+
+  // Most Expensive calculation
+  let mostExpensiveSub = null;
+  if (activeSubs.length > 0) {
+    mostExpensiveSub = activeSubs.reduce((max, s) => Number(s.price) > Number(max.price) ? s : max, activeSubs[0]);
+  }
+  const mostExpensiveText = mostExpensiveSub 
+    ? `${mostExpensiveSub.name} (Rp ${Number(mostExpensiveSub.price).toLocaleString("id-ID")})`
+    : "-";
+
+  // Next Renewal calculation
+  let nextRenewalSub = null;
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+  
+  const futureSubs = activeSubs.filter(s => s.duDate && new Date(s.duDate) >= now);
+  if (futureSubs.length > 0) {
+    nextRenewalSub = futureSubs.reduce((closest, s) => {
+      return new Date(s.duDate) < new Date(closest.duDate) ? s : closest;
+    }, futureSubs[0]);
+  } else if (activeSubs.length > 0) {
+    nextRenewalSub = activeSubs.reduce((closest, s) => {
+      return new Date(s.duDate) < new Date(closest.duDate) ? s : closest;
+    }, activeSubs[0]);
+  }
+
+  const formatDate = (dateStr: string) => {
+    try {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString("id-ID", {
+        day: "numeric",
+        month: "long",
+        year: "numeric"
+      });
+    } catch {
+      return dateStr;
     }
   };
 
@@ -158,7 +235,7 @@ export default function ProfilePage() {
           <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 flex items-center justify-between">
             <div>
               <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Active</p>
-              <p className="text-2xl font-extrabold text-slate-800">8</p>
+              <p className="text-2xl font-extrabold text-slate-800">{activeCount}</p>
             </div>
             <div className="w-10 h-10 rounded-full bg-emerald-50 flex items-center justify-center">
               <Zap className="w-5 h-5 text-emerald-500" />
@@ -167,7 +244,9 @@ export default function ProfilePage() {
           <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 flex items-center justify-between">
             <div>
               <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Monthly</p>
-              <p className="text-2xl font-extrabold text-slate-800">245K</p>
+              <p className="text-2xl font-extrabold text-slate-800">
+                Rp {monthlyCost.toLocaleString("id-ID")}
+              </p>
             </div>
             <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center">
               <Wallet className="w-5 h-5 text-blue-500" />
@@ -176,7 +255,7 @@ export default function ProfilePage() {
           <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 flex items-center justify-between">
             <div>
               <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Renewal</p>
-              <p className="text-2xl font-extrabold text-slate-800">2</p>
+              <p className="text-2xl font-extrabold text-slate-800">{renewalCount}</p>
             </div>
             <div className="w-10 h-10 rounded-full bg-orange-50 flex items-center justify-center">
               <Clock className="w-5 h-5 text-orange-500" />
@@ -218,13 +297,11 @@ export default function ProfilePage() {
               </div>
             </section>
 
-
           </div>
 
           {/* Right Column - Contextual Cards */}
           <div className="flex flex-col gap-8 lg:col-span-4">
             
-
             {/* Insights */}
             <section className="bg-slate-900 rounded-3xl border border-slate-800 shadow-lg p-6 relative overflow-hidden group">
               <div className="absolute top-0 right-0 w-32 h-32 bg-violet-500 opacity-20 blur-3xl rounded-full"></div>
@@ -236,18 +313,24 @@ export default function ProfilePage() {
               <div className="flex flex-col gap-6 relative z-10">
                 <div>
                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Favorite Category</p>
-                  <p className="text-sm font-bold text-white">Entertainment</p>
+                  <p className="text-sm font-bold text-white">{favoriteCategory}</p>
                 </div>
                 <div>
                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Most Expensive</p>
-                  <p className="text-sm font-bold text-white">Adobe Creative Cloud</p>
+                  <p className="text-sm font-bold text-white">{mostExpensiveText}</p>
                 </div>
                 <div>
                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Next Renewal</p>
-                  <div className="flex items-center gap-2">
-                    <p className="text-sm font-bold text-white">Netflix</p>
-                    <span className="text-[10px] font-bold text-violet-300 bg-violet-900/50 px-2 py-0.5 rounded border border-violet-700/50">12 Juni 2026</span>
-                  </div>
+                  {nextRenewalSub ? (
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-bold text-white">{nextRenewalSub.name}</p>
+                      <span className="text-[10px] font-bold text-violet-300 bg-violet-900/50 px-2 py-0.5 rounded border border-violet-700/50">
+                        {formatDate(nextRenewalSub.duDate)}
+                      </span>
+                    </div>
+                  ) : (
+                    <p className="text-sm font-bold text-white">-</p>
+                  )}
                 </div>
               </div>
             </section>

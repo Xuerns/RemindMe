@@ -13,6 +13,8 @@ import java.util.List;
 import com.remindMe.demo.subscription.subscriptionEntity;
 import com.remindMe.demo.report.reportEntity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.remindMe.demo.notification.notificationEntity;
 
 @Getter // Ini Buat generate semua getter method (contohnya : getId(), getUsername())
@@ -32,6 +34,16 @@ import com.remindMe.demo.notification.notificationEntity;
 @DiscriminatorColumn(name = "type", discriminatorType = DiscriminatorType.STRING) // Ini buat bikin column "type" yang
                                                                                   // nanti isinya bisa "REGULAR" atau
                                                                                   // "PREMIUM"
+@JsonTypeInfo(
+    use = JsonTypeInfo.Id.NAME,
+    include = JsonTypeInfo.As.PROPERTY,
+    property = "type",
+    defaultImpl = regularUser.class
+)
+@JsonSubTypes({
+    @JsonSubTypes.Type(value = regularUser.class, name = "REGULAR"),
+    @JsonSubTypes.Type(value = premiumUser.class, name = "PREMIUM")
+})
 public abstract class userEntity {
 
     @Id
