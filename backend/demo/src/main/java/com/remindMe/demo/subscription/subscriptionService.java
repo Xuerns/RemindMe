@@ -30,6 +30,7 @@ public class subscriptionService {
         existSub.setActive(request.isActive());
         existSub.setDuDate(request.getDuDate());
         existSub.setStatus(subscriptionEntity.statusSubs.valueOf(request.getStatus()));
+        existSub.setPeriod(subscriptionEntity.periodSubs.valueOf(request.getPeriod()));
         subscriptionRepo.save(existSub);
         try{
             notificationService.scheduleReminder(existSub);
@@ -79,7 +80,7 @@ public class subscriptionService {
         sub.setDuDate(request.getDuDate());
         sub.setStatus(subscriptionEntity.statusSubs.valueOf(request.getStatus()));
         sub.setActive(request.isActive());
-
+        sub.setPeriod(subscriptionEntity.periodSubs.valueOf(request.getPeriod()));
         userEntity user = userRepo.findById(request.getUserId()).orElseThrow(() -> new RuntimeException("User tidak ditemukan"));
         sub.setUser(user);
         // return subscriptionRepo.save(sub);

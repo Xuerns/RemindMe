@@ -30,6 +30,16 @@ public class subscriptionEntity {
         UPCOMING,
     }
 
+    public enum periodSubs{
+        THREE MONTH,
+        SIX_MONTH,
+        TWELVE_MONTH
+    }
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "period")
+    private periodSubs period;
+    
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;

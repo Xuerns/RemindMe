@@ -11,6 +11,7 @@ public class subscriptionRequest {
     private String category;
     private double price;
     private LocalDate duDate;
+    private String period;
     private String status;
     private boolean active;
     private String userId;
