@@ -165,6 +165,7 @@ export default function AnalyticsPage() {
         setAnalyticsLocked("PREMIUM");
       }
       setCheckingAccess(false);
+      return true;
     } catch {
       if (status !== "PREMIUM") {
         setAnalyticsLocked("REGULER");
@@ -174,7 +175,7 @@ export default function AnalyticsPage() {
       setCheckingAccess(false);
       return false;
     }
-  }, []);
+  }, [status]);
 
  const verifyPremium = async () => {
       const userId = getCurrentUserId();
@@ -247,7 +248,7 @@ export default function AnalyticsPage() {
 
   // 4. Penggambaran Donut & Bar Charts (Chart.js)
   useEffect(() => {
-    if (!chartJsLoaded || !reportData || analyticsLocked) return;
+    if (!chartJsLoaded || !reportData || analyticsLocked !== "PREMIUM") return;
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const ChartClass = (window as any).Chart;

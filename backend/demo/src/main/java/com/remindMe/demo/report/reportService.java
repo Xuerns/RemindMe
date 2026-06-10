@@ -138,58 +138,6 @@ public class reportService {
         report.setGeneratedAt(new Date());
         report.setSubscriptions(new ArrayList<>(subscriptions));
 
-<<<<<<< Updated upstream
         return reportRepository.save(report);
-=======
-        return report;
-    }
-
-    public reportEntity getYearlyReport(String userId, int year) {
-        List<subscriptionEntity> allSubscriptions = subscriptionRepository.findByUserIdOrderByDuDate(userId);
-
-        List<subscriptionEntity> filteredSubscriptions = allSubscriptions.stream()
-                .filter(subscription -> subscription.isActive())
-                .filter(subscription -> subscription.getDuDate() != null)
-                .filter(subscription -> subscription.getDuDate().getYear() == year)
-                .toList();
-
-        reportEntity report = new reportEntity();
-        report.setUserId(userId);
-        report.setMonth(0); // 0 artinya laporan tahunan
-        report.setYear(year);
-        report.setGeneratedAt(LocalDate.now());
-        report.setSubscriptions(filteredSubscriptions);
-
-        return report;
-    }
-
-    public double calcMonthlyTotal(String userId, int month, int year) {
-        reportEntity report = getMonthlyReport(userId, month, year);
-        return report.calcMonthlyTotal();
-    }
-
-    public List<String> getSavingsTips(String userId) {
-        List<subscriptionEntity> allSubscriptions = subscriptionRepository.findByUserId(userId);
-
-        List<subscriptionEntity> activeSubscriptions = allSubscriptions.stream()
-                .filter(subscription -> subscription.isActive())
-                .toList();
-
-        reportEntity report = new reportEntity();
-        report.setUserId(userId);
-        report.setMonth(0);
-        report.setYear(LocalDate.now().getYear());
-        report.setGeneratedAt(LocalDate.now());
-        report.setSubscriptions(activeSubscriptions);
-
-        return report.getSavingsTips();
-    }
-
-    public File exportPdf(String userId) {
-        throw new ResponseStatusException(
-                HttpStatus.NOT_IMPLEMENTED,
-                "Fitur export PDF belum diimplementasikan."
-        );
->>>>>>> Stashed changes
     }
 }
