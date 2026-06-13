@@ -27,6 +27,9 @@ public interface subscriptionRepository extends JpaRepository<subscriptionEntity
     @Query("SELECT s FROM subscriptionEntity s WHERE LOWER(s.name) LIKE LOWER(CONCAT('%', :keyword, '%'))")
     List<subscriptionEntity> searchByKeyword(@Param("keyword") String keyword);
 
-    Optional<subscriptionEntity> findByName(String name); // Optional Agar aplikasi tidak langsung crash jika data tidak
-                                                          // ditemukan
+    Optional<subscriptionEntity> findByName(String name);
+
+    // Cari subscription ACTIVE yang duDate-nya sudah lewat hari ini (perlu auto-renew)
+    @Query("SELECT s FROM subscriptionEntity s WHERE s.isActive = true AND s.duDate < :today")
+    List<subscriptionEntity> findActiveSubscriptionsDueBefore(@Param("today") java.time.LocalDate today);
 }   

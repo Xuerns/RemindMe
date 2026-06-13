@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.remindMe.demo.User.userEntity;
@@ -23,6 +24,7 @@ public class historyEntity{
     //status History
     public enum statusHistory{
         ACTIVE,
+        INACTIVE,   // Dinonaktifkan - tidak akan auto-renew saat habis
         CANCELED,
         EXPIRED,
         UPGRADED,
@@ -57,5 +59,17 @@ public class historyEntity{
 
     @Enumerated(EnumType.STRING)
     private statusHistory status;
+
+    // Waktu pencatatan history dengan presisi jam:menit:detik
+    @Column(columnDefinition = "DATETIME DEFAULT NOW()")
+    private LocalDateTime recordedAt;
+
+    // Auto-set recordedAt ke waktu sekarang sebelum disimpan ke database
+    @PrePersist
+    public void prePersist() {
+        if (this.recordedAt == null) {
+            this.recordedAt = LocalDateTime.now();
+        }
+    }
 
 }

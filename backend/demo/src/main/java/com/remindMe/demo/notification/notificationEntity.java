@@ -26,7 +26,7 @@ public class notificationEntity {
     @Column(nullable = false)
     private String message;
 
-    @Column(nullable = false)
+    @Column(name = "scheduledate", nullable = false)
     private LocalDate scheduledAt;
 
     @Column(nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE")

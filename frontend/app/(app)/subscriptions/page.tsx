@@ -18,6 +18,8 @@ const categoryColors: Record<string, CategoryStyle> = {
 };
 
 const periodLabel: Record<string, string> = {
+  ONE_MINUTE: "1 Days",
+  ONE_MONTH: "1 Month",
   THREE_MONTH: "3 Month",
   SIX_MONTH: "6 Month",
   TWELVE_MONTH: "12 Month",
@@ -41,14 +43,10 @@ interface SubscriptionEntity {
   price: number;
   duDate: string;
   category: string;
-<<<<<<< Updated upstream
-  active: boolean;
-=======
   isActive?: boolean;
   active?: boolean;
->>>>>>> Stashed changes
   status: "PAID" | "UPCOMING";
-  period: "THREE_MONTH" | "SIX_MONTH" | "TWELVE_MONTH";
+  period: "ONE_MINUTE" | "ONE_MONTH" | "THREE_MONTH" | "SIX_MONTH" | "TWELVE_MONTH";
 }
 
 function AppIcon({ name }: { name: string }) {
@@ -106,12 +104,12 @@ export default function SubscriptionPage() {
   const PAGE_SIZE = 3;
 
   const [showAddModal, setShowAddModal] = useState<boolean>(false);
-  const [addForm, setAddForm] = useState({ name: "", category: "", duDate: "", price: "", period: "THREE_MONTH" as "THREE_MONTH" | "SIX_MONTH" | "TWELVE_MONTH" });
+  const [addForm, setAddForm] = useState({ name: "", category: "", duDate: "", price: "", period: "THREE_MONTH" as "ONE_MINUTE" | "ONE_MONTH" | "THREE_MONTH" | "SIX_MONTH" | "TWELVE_MONTH" });
   const [addLoading, setAddLoading] = useState<boolean>(false);
   const [addError, setAddError] = useState<string>("");
 
   const [showEditModal, setShowEditModal] = useState<boolean>(false);
-  const [editForm, setEditForm] = useState({ id: "", name: "", category: "", duDate: "", price: "", period: "THREE_MONTH" as "THREE_MONTH" | "SIX_MONTH" | "TWELVE_MONTH", isActive: true });
+  const [editForm, setEditForm] = useState({ id: "", name: "", category: "", duDate: "", price: "", period: "THREE_MONTH" as "ONE_MINUTE" | "ONE_MONTH" | "THREE_MONTH" | "SIX_MONTH" | "TWELVE_MONTH", isActive: true });
   const [editLoading, setEditLoading] = useState<boolean>(false);
   const [editError, setEditError] = useState<string>("");
 
@@ -203,7 +201,10 @@ export default function SubscriptionPage() {
         userId: USER_ID,
       };
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/subscriptions/add`, { method: "POST", headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" }, body: JSON.stringify(payload) });
-      if (!res.ok) throw new Error("Gagal menambahkan subscription.");
+      if (!res.ok) {
+          const errData = await res.json().catch(() => null);
+          throw new Error(errData?.error ? `Gagal: ${errData.error} (Cause: ${errData.cause})` : "Gagal menambahkan subscription.");
+      }
       setShowAddModal(false);
       setAddForm({ name: "", category: "", duDate: "", price: "", period: "THREE_MONTH" });
       fetchAll();
@@ -214,9 +215,6 @@ export default function SubscriptionPage() {
   }
 
   function openEditModal(sub: SubscriptionEntity): void {
-<<<<<<< Updated upstream
-    setEditForm({ id: sub.id, name: sub.name, category: sub.category, duDate: sub.duDate ? sub.duDate.slice(0, 10) : "", price: String(sub.price), period: sub.period ?? "THREE_MONTH", isActive: sub.active });
-=======
     setEditForm({
       id: sub.id,
       name: sub.name,
@@ -224,9 +222,9 @@ export default function SubscriptionPage() {
       duDate: sub.duDate ? sub.duDate.slice(0, 10) : "",
       price: String(sub.price),
       status: sub.status,
+      period: sub.period,
       isActive: sub.isActive !== false && sub.active !== false,
     });
->>>>>>> Stashed changes
     setEditError("");
     setShowEditModal(true);
   }
@@ -337,7 +335,7 @@ export default function SubscriptionPage() {
                   </div>
                   {filterHover === "period" && (
                     <div style={{ position: "absolute", right: "100%", top: 0, background: "#fff", borderRadius: 12, boxShadow: "0 8px 32px rgba(0,0,0,0.12)", border: "1px solid #F1F0F5", minWidth: 140, zIndex: 201 }}>
-                      {[{ value: "", label: "Semua" }, { value: "THREE_MONTH", label: "3 Month" }, { value: "SIX_MONTH", label: "6 Month" }, { value: "TWELVE_MONTH", label: "12 Month" }].map(opt => (
+                      {[{ value: "", label: "Semua" }, { value: "ONE_MINUTE", label: "1 Days" }, { value: "ONE_MONTH", label: "1 Month" }, { value: "THREE_MONTH", label: "3 Month" }, { value: "SIX_MONTH", label: "6 Month" }, { value: "TWELVE_MONTH", label: "12 Month" }].map(opt => (
                         <div key={opt.value} onClick={() => { setFilterPeriod(opt.value); setPage(0); setShowFilterMenu(false); setFilterHover(null); }}
                           style={{ padding: "10px 16px", fontSize: 13, cursor: "pointer", background: filterPeriod === opt.value ? "#F5F3FF" : "transparent", color: filterPeriod === opt.value ? "#7C3AED" : "#374151", fontWeight: filterPeriod === opt.value ? 600 : 400, borderRadius: 8 }}>
                           {opt.label}
@@ -388,14 +386,10 @@ export default function SubscriptionPage() {
                   <td style={{ padding: "14px 12px" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                       <AppIcon name={sub.name} />
-<<<<<<< Updated upstream
-                      <div style={{ fontWeight: 600, fontSize: 14 }}>{sub.name}</div>
-=======
                       <div>
                         <div style={{ fontWeight: 600, fontSize: 14 }}>{sub.name}</div>
                         <div style={{ color: "#9CA3AF", fontSize: 11 }}>{(sub.isActive !== false && sub.active !== false) ? "Monthly Billing" : "Inactive"}</div>
                       </div>
->>>>>>> Stashed changes
                     </div>
                   </td>
                   <td style={{ padding: "14px 12px" }}>
@@ -524,7 +518,9 @@ export default function SubscriptionPage() {
 
               <div>
                 <label style={labelStyle}>Periode Pembayaran</label>
-                <select value={editForm.period} onChange={e => setEditForm(f => ({ ...f, period: e.target.value as "THREE_MONTH" | "SIX_MONTH" | "TWELVE_MONTH" }))} style={selectStyle}>
+                <select value={editForm.period} onChange={e => setEditForm(f => ({ ...f, period: e.target.value as "ONE_MINUTE" | "ONE_MONTH" | "THREE_MONTH" | "SIX_MONTH" | "TWELVE_MONTH" }))} style={selectStyle}>
+                  <option value="ONE_MINUTE">1 Days</option>
+                  <option value="ONE_MONTH">1 Month</option>
                   <option value="THREE_MONTH">3 Month</option>
                   <option value="SIX_MONTH">6 Month</option>
                   <option value="TWELVE_MONTH">12 Month</option>
@@ -598,7 +594,9 @@ export default function SubscriptionPage() {
 
               <div>
                 <label style={labelStyle}>Periode Pembayaran</label>
-                <select value={addForm.period} onChange={e => setAddForm(f => ({ ...f, period: e.target.value as "THREE_MONTH" | "SIX_MONTH" | "TWELVE_MONTH" }))} style={selectStyle}>
+                <select value={addForm.period} onChange={e => setAddForm(f => ({ ...f, period: e.target.value as "ONE_MINUTE" | "ONE_MONTH" | "THREE_MONTH" | "SIX_MONTH" | "TWELVE_MONTH" }))} style={selectStyle}>
+                  <option value="ONE_MINUTE">1 Days</option>
+                  <option value="ONE_MONTH">1 Month</option>
                   <option value="THREE_MONTH">3 Month</option>
                   <option value="SIX_MONTH">6 Month</option>
                   <option value="TWELVE_MONTH">12 Month</option>

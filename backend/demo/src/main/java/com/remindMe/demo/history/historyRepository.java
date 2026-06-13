@@ -7,7 +7,9 @@ import java.util.List;
 
 @Repository
 public interface historyRepository extends JpaRepository<historyEntity, String>{
-    //history by ID user
-    List<historyEntity> findByUser_Id(String userId);
+    // History by user ID, diurutkan dari yang terbaru dicatat (terbaru di atas)
+    List<historyEntity> findByUser_IdOrderByRecordedAtDesc(String userId);
     
+    // Fallback: tanpa urutan
+    List<historyEntity> findByUser_Id(String userId);
 } 

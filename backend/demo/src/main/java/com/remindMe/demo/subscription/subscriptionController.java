@@ -62,10 +62,14 @@ public class subscriptionController {
     }
 
     @PostMapping("/add")
-    public subscriptionEntity addSubscription(@RequestBody subscriptionRequest request) {
-
-        return subscriptionService.addSubscription(request); // memasukkan isi dari subscription ke method add di
-                                                                  // service
+    public ResponseEntity<?> addSubscription(@RequestBody subscriptionRequest request) {
+        try {
+            subscriptionEntity saved = subscriptionService.addSubscription(request);
+            return ResponseEntity.ok(saved);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(java.util.Map.of("error", e.getMessage(), "cause", e.getCause() != null ? e.getCause().getMessage() : ""));
+        }
     }
 
     @DeleteMapping("/delete/{id}")

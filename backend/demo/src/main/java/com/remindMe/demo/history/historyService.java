@@ -11,14 +11,14 @@ import java.util.List;
 public class historyService {
     private final historyRepository historyRepo;
     
-    //method ambil history by userId
+    //method ambil history by userId, diurutkan terbaru di atas
     public List<historyEntity>getHistoryByUser(String userId){
-        return historyRepo.findByUser_Id(userId);
+        return historyRepo.findByUser_IdOrderByRecordedAtDesc(userId);
     }
     
-    //method simpan history
+    //method simpan history (saveAndFlush agar langsung ditulis ke DB)
     public historyEntity addHistory(historyEntity history){
-        return historyRepo.save(history);
+        return historyRepo.saveAndFlush(history);
     }
     
     //method ambil semua history
