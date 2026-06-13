@@ -15,10 +15,10 @@ public interface subscriptionRepository extends JpaRepository<subscriptionEntity
 
     List<subscriptionEntity> findByCategory(String category);
 
-    @Query("SELECT s FROM subscriptionEntity s WHERE s.user.id = :userId ORDER BY s.price DESC")
+    @Query("SELECT s FROM subscriptionEntity s WHERE s.user.id = :userId AND s.isActive = true ORDER BY s.price DESC")
     List<subscriptionEntity> findTop3ByUserIdOrderByPriceDesc(@Param("userId") String userId, Pageable pageable);
 
-    @Query("SELECT COALESCE(SUM(s.price), 0) FROM subscriptionEntity s WHERE s.user.id = :userId")
+    @Query("SELECT COALESCE(SUM(s.price), 0) FROM subscriptionEntity s WHERE s.user.id = :userId AND s.isActive = true")
     Double getTotalMonthlyByUserId(@Param("userId") String userId);
 
     @Query("SELECT COUNT(s) FROM subscriptionEntity s WHERE s.user.id = :userId")

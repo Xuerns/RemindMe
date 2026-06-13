@@ -103,7 +103,7 @@ public class subscriptionService {
             history.setCategory(saved.getCategory());
             history.setPrice(saved.getPrice());
             
-            Localdate paymentDate = saved.getDuDate();
+            LocalDate paymentDate = saved.getDuDate();
             history.setStartDate(paymentDate);
 
             LocalDate calculatedEndDate = paymentDate;
