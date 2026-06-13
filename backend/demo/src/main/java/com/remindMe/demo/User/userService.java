@@ -32,6 +32,7 @@ public class userService {
 
         existingUser.setUsername(updatedUser.getUsername());
         existingUser.setEmail(updatedUser.getEmail());
+        existingUser.setProfilePicture(updatedUser.getProfilePicture());
 
         return userRepository.save(existingUser);
     }

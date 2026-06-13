@@ -58,6 +58,9 @@ public abstract class userEntity {
 
     @Column(nullable = false)
     private String password;
+    @Lob
+    @Column(name = "profile_picture", columnDefinition = "LONGTEXT")
+    private String profilePicture;
 
     /*
      * ======== Penjelasan

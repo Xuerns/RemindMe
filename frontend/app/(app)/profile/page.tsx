@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { 
   User, Camera, Mail, Award, CreditCard, Smartphone, CheckCircle2, 
   BarChart2, Calendar, Settings2, Bell, Wallet, Star, Clock, Zap
@@ -20,6 +20,24 @@ export default function ProfilePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState("");
+  const [profilePicture, setProfilePicture] = useState<string | null>(null);
+  const [premiumExpiryDate, setPremiumExpiryDate] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleAvatarClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setProfilePicture(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   useEffect(() => {
     if (!checkToken()) {
@@ -46,6 +64,8 @@ export default function ProfilePage() {
           setUsername(data.username || "");
           setEmail(data.email || "");
           setUserType(data.type || "REGULAR");
+          setProfilePicture(data.profilePicture || null);
+          setPremiumExpiryDate(data.premiumExpiryDate || null);
         }
 
         // Fetch Subscriptions
@@ -85,7 +105,8 @@ export default function ProfilePage() {
         body: JSON.stringify({
           username,
           email,
-          type: userType
+          type: userType,
+          profilePicture
         }),
       });
 
@@ -104,12 +125,12 @@ export default function ProfilePage() {
   };
 
   // Dynamic Calculations
-  const activeSubs = subscriptions.filter(s => s.isActive);
+  const activeSubs = subscriptions.filter(s => s.isActive !== false && s.active !== false);
   const activeCount = activeSubs.length;
   
   const monthlyCost = activeSubs.reduce((sum, s) => sum + Number(s.price), 0);
   
-  const renewalCount = subscriptions.filter(s => s.isActive && s.status === "UPCOMING").length;
+  const renewalCount = subscriptions.filter(s => (s.isActive !== false && s.active !== false) && s.status === "UPCOMING").length;
 
   // Favorite Category calculation based on frequency
   const categoryCounts: Record<string, number> = {};
@@ -169,7 +190,7 @@ export default function ProfilePage() {
     return (
       <div className="flex-1 min-h-screen flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
-          <div className="w-10 h-10 border-4 border-violet-500 border-t-transparent rounded-full animate-spin"></div>
+          <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
           <p className="text-sm font-medium text-slate-500 animate-pulse">Loading profile...</p>
         </div>
       </div>
@@ -177,21 +198,37 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="font-sans selection:bg-violet-100 selection:text-violet-900 pb-12">
+    <div className="font-sans selection:bg-primary-container selection:text-primary pb-12">
       <div className="w-full mx-auto px-6 md:px-12 lg:px-16 xl:px-24 py-10 animate-in fade-in slide-in-from-bottom-4 duration-700 ease-out">
         
         {/* Compact Header */}
         <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 mb-8 flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-5 w-full md:w-auto">
-            <div className="relative group/avatar cursor-pointer shrink-0">
-              <img 
-                src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=256&h=256" 
-                alt="Profile" 
-                className="w-20 h-20 rounded-full object-cover ring-4 ring-slate-50 shadow-md group-hover/avatar:opacity-90 transition-opacity"
-              />
+            <div 
+              onClick={handleAvatarClick}
+              className="relative group/avatar cursor-pointer shrink-0"
+            >
+              {profilePicture ? (
+                <img 
+                  src={profilePicture} 
+                  alt="Profile" 
+                  className="w-20 h-20 rounded-full object-cover ring-4 ring-slate-50 shadow-md group-hover/avatar:opacity-90 transition-opacity"
+                />
+              ) : (
+                <div className="w-20 h-20 rounded-full bg-slate-100 flex items-center justify-center ring-4 ring-slate-50 shadow-md group-hover/avatar:opacity-90 transition-opacity text-slate-400">
+                  <User className="w-10 h-10" />
+                </div>
+              )}
               <div className="absolute inset-0 bg-black/40 rounded-full opacity-0 group-hover/avatar:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                 <Camera className="w-6 h-6 text-white" />
               </div>
+              <input 
+                type="file" 
+                ref={fileInputRef} 
+                onChange={handleImageChange} 
+                accept="image/*" 
+                className="hidden" 
+              />
             </div>
             <div>
               <div className="flex items-center gap-3">
@@ -219,7 +256,7 @@ export default function ProfilePage() {
             <button 
               onClick={handleSave}
               disabled={isSaving}
-              className="w-full md:w-auto px-6 py-2.5 rounded-xl bg-violet-600 text-white text-sm font-bold hover:bg-violet-700 shadow-sm hover:shadow transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full md:w-auto px-6 py-2.5 rounded-xl bg-primary text-white text-sm font-bold hover:bg-primary/90 shadow-sm hover:shadow transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {isSaving ? (
                 <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
@@ -231,16 +268,20 @@ export default function ProfilePage() {
         </div>
 
         {/* Mini Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 flex items-center justify-between">
-            <div>
-              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Active</p>
-              <p className="text-2xl font-extrabold text-slate-800">{activeCount}</p>
+        <div className={`grid grid-cols-1 ${userType === "PREMIUM" ? "sm:grid-cols-3" : "sm:grid-cols-2"} gap-4 mb-8`}>
+          {userType === "PREMIUM" && (
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 flex items-center justify-between">
+              <div>
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Masa Aktif</p>
+                <p className="text-base font-extrabold text-slate-800">
+                  {premiumExpiryDate ? formatDate(premiumExpiryDate) : "-"}
+                </p>
+              </div>
+              <div className="w-10 h-10 rounded-full bg-emerald-50 flex items-center justify-center">
+                <Zap className="w-5 h-5 text-emerald-500" />
+              </div>
             </div>
-            <div className="w-10 h-10 rounded-full bg-emerald-50 flex items-center justify-center">
-              <Zap className="w-5 h-5 text-emerald-500" />
-            </div>
-          </div>
+          )}
           <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 flex items-center justify-between">
             <div>
               <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Monthly</p>
@@ -270,7 +311,7 @@ export default function ProfilePage() {
             {/* Personal Information Group */}
             <section className="bg-white rounded-3xl border border-slate-200 shadow-sm p-8">
               <div className="flex items-center gap-3 mb-6">
-                <div className="p-2 rounded-lg bg-violet-50 text-violet-600">
+                <div className="p-2 rounded-lg bg-primary-container text-primary">
                   <User className="w-5 h-5" />
                 </div>
                 <h2 className="text-lg font-bold text-slate-800">Personal Information</h2>
@@ -281,8 +322,13 @@ export default function ProfilePage() {
                   <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Full Name</label>
                   <input
                     value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium text-slate-800 bg-slate-50/50 hover:bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 transition-all"
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (/^[a-zA-Z\s]*$/.test(val)) {
+                        setUsername(val);
+                      }
+                    }}
+                    className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium text-slate-800 bg-slate-50/50 hover:bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                   />
                 </div>
                 <div className="flex flex-col gap-2">
@@ -297,39 +343,69 @@ export default function ProfilePage() {
               </div>
             </section>
 
+            {/* Upgrade Banner for REGULAR users */}
+            {userType === "REGULAR" && (
+              <section className="bg-gradient-to-br from-amber-500/10 via-orange-500/5 to-transparent rounded-3xl border border-amber-500/20 shadow-sm p-6 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/10 rounded-full blur-2xl pointer-events-none"></div>
+                <div className="flex items-start gap-4">
+                  <div className="p-3 rounded-2xl bg-amber-500 text-white shrink-0 shadow-md shadow-amber-500/20">
+                    <Zap className="w-6 h-6 animate-pulse" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-extrabold text-slate-800 tracking-tight">Upgrade ke Premium</h3>
+                    <p className="text-xs text-slate-500 font-medium mt-1 leading-relaxed">
+                      Buka semua fitur premium untuk mengelola keuangan dan langganan Anda secara tak terbatas:
+                    </p>
+                    <ul className="text-[11px] text-slate-600 font-medium mt-3 space-y-1.5 list-disc list-inside">
+                      <li>Langganan tanpa batas (Regular maks. 5)</li>
+                      <li>Grafik analisis & laporan mendalam</li>
+                      <li>Ekspor laporan pengeluaran bulanan</li>
+                    </ul>
+                    <button 
+                      onClick={() => router.push("/upgrade")}
+                      className="mt-4 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl shadow transition-all duration-200 cursor-pointer"
+                    >
+                      Upgrade Sekarang
+                    </button>
+                  </div>
+                </div>
+              </section>
+            )}
+
           </div>
 
           {/* Right Column - Contextual Cards */}
           <div className="flex flex-col gap-8 lg:col-span-4">
             
             {/* Insights */}
-            <section className="bg-slate-900 rounded-3xl border border-slate-800 shadow-lg p-6 relative overflow-hidden group">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-violet-500 opacity-20 blur-3xl rounded-full"></div>
-              <div className="flex items-center gap-2 mb-6 relative z-10">
-                <Star className="w-4 h-4 text-violet-400" />
-                <h3 className="text-xs font-bold text-violet-200 uppercase tracking-widest">Insights</h3>
+            <section className="bg-white rounded-3xl border border-slate-200 shadow-sm p-8">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-2 rounded-lg bg-primary-container text-primary">
+                  <Star className="w-5 h-5" />
+                </div>
+                <h2 className="text-lg font-bold text-slate-800">Insights</h2>
               </div>
               
-              <div className="flex flex-col gap-6 relative z-10">
+              <div className="flex flex-col gap-6">
                 <div>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Favorite Category</p>
-                  <p className="text-sm font-bold text-white">{favoriteCategory}</p>
+                  <p className="text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Favorite Category</p>
+                  <p className="text-base font-extrabold text-slate-800">{favoriteCategory}</p>
                 </div>
                 <div>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Most Expensive</p>
-                  <p className="text-sm font-bold text-white">{mostExpensiveText}</p>
+                  <p className="text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Most Expensive</p>
+                  <p className="text-base font-extrabold text-slate-800">{mostExpensiveText}</p>
                 </div>
                 <div>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Next Renewal</p>
+                  <p className="text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Next Renewal</p>
                   {nextRenewalSub ? (
-                    <div className="flex items-center gap-2">
-                      <p className="text-sm font-bold text-white">{nextRenewalSub.name}</p>
-                      <span className="text-[10px] font-bold text-violet-300 bg-violet-900/50 px-2 py-0.5 rounded border border-violet-700/50">
+                    <div className="flex items-center gap-2 mt-1">
+                      <p className="text-base font-extrabold text-slate-800">{nextRenewalSub.name}</p>
+                      <span className="text-[10px] font-bold text-primary bg-primary-container px-2 py-0.5 rounded border border-primary-container">
                         {formatDate(nextRenewalSub.duDate)}
                       </span>
                     </div>
                   ) : (
-                    <p className="text-sm font-bold text-white">-</p>
+                    <p className="text-base font-extrabold text-slate-800">-</p>
                   )}
                 </div>
               </div>

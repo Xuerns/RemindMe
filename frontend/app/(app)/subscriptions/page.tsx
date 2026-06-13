@@ -41,7 +41,12 @@ interface SubscriptionEntity {
   price: number;
   duDate: string;
   category: string;
+<<<<<<< Updated upstream
   active: boolean;
+=======
+  isActive?: boolean;
+  active?: boolean;
+>>>>>>> Stashed changes
   status: "PAID" | "UPCOMING";
   period: "THREE_MONTH" | "SIX_MONTH" | "TWELVE_MONTH";
 }
@@ -209,7 +214,19 @@ export default function SubscriptionPage() {
   }
 
   function openEditModal(sub: SubscriptionEntity): void {
+<<<<<<< Updated upstream
     setEditForm({ id: sub.id, name: sub.name, category: sub.category, duDate: sub.duDate ? sub.duDate.slice(0, 10) : "", price: String(sub.price), period: sub.period ?? "THREE_MONTH", isActive: sub.active });
+=======
+    setEditForm({
+      id: sub.id,
+      name: sub.name,
+      category: sub.category,
+      duDate: sub.duDate ? sub.duDate.slice(0, 10) : "",
+      price: String(sub.price),
+      status: sub.status,
+      isActive: sub.isActive !== false && sub.active !== false,
+    });
+>>>>>>> Stashed changes
     setEditError("");
     setShowEditModal(true);
   }
@@ -371,7 +388,14 @@ export default function SubscriptionPage() {
                   <td style={{ padding: "14px 12px" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                       <AppIcon name={sub.name} />
+<<<<<<< Updated upstream
                       <div style={{ fontWeight: 600, fontSize: 14 }}>{sub.name}</div>
+=======
+                      <div>
+                        <div style={{ fontWeight: 600, fontSize: 14 }}>{sub.name}</div>
+                        <div style={{ color: "#9CA3AF", fontSize: 11 }}>{(sub.isActive !== false && sub.active !== false) ? "Monthly Billing" : "Inactive"}</div>
+                      </div>
+>>>>>>> Stashed changes
                     </div>
                   </td>
                   <td style={{ padding: "14px 12px" }}>
