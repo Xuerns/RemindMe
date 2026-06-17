@@ -115,6 +115,7 @@ export default function SubscriptionPage() {
 
   const [userType, setUserType] = useState<string>("");
   const [showUpgradeModal, setShowUpgradeModal] = useState<boolean>(false);
+  const [mounted, setMounted] = useState<boolean>(false);
 
   async function fetchAll(): Promise<void> {
     setLoading(true);
@@ -145,7 +146,10 @@ export default function SubscriptionPage() {
     setLoading(false);
   }
 
-  useEffect(() => { fetchAll(); }, []);
+  useEffect(() => {
+    setMounted(true);
+    fetchAll();
+  }, []);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -276,6 +280,14 @@ export default function SubscriptionPage() {
   const paginated = filtered.slice(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE);
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
   const activeFilterCount = (filterStatus ? 1 : 0) + (filterPeriod ? 1 : 0);
+
+  if (!mounted) {
+    return (
+      <div style={{ fontFamily: "'DM Sans', sans-serif", minHeight: "100vh", background: "#F8F7FC", padding: "32px 36px", color: "#1A1523" }}>
+        <div style={{ color: "#9CA3AF" }}>Loading page...</div>
+      </div>
+    );
+  }
 
   return (
     <div style={{ fontFamily: "'DM Sans',sans-serif", minHeight: "100vh", background: "#F8F7FC", padding: "32px 36px", color: "#1A1523" }}>

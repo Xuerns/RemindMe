@@ -33,3 +33,18 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
   return NextResponse.json({}, { status: res.status });
 }
+
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ path: string[] }> }) {
+  const { path } = await params;
+  const pathStr = path.join("/");
+  const token = request.headers.get("Authorization");
+  
+  const res = await fetch(`http://localhost:8080/api/notifications/${pathStr}`, {
+    method: "DELETE",
+    headers: {
+      Authorization: token || "",
+    },
+  });
+
+  return NextResponse.json({}, { status: res.status });
+}

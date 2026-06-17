@@ -41,6 +41,7 @@ export default function Sidebar() {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const[unreadCount,setUnreadCount] = useState(0);
 
   const sidebarRef = useRef<HTMLElement>(null);
 
@@ -90,6 +91,26 @@ export default function Sidebar() {
     document.body.style.overflow = isMobileOpen ? "hidden" : "";
     return () => { document.body.style.overflow = ""; };
   }, [isMobileOpen]);
+
+  useEffect(() => {
+  const fetchUnread = async () => {
+    const token = localStorage.getItem("token");
+    const userId = localStorage.getItem("id");
+    if (!token || !userId) return;
+    try {
+      const res = await fetch(`/api/notifications/unread/${userId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setUnreadCount(data.length);
+      }
+    } catch {}
+  };
+  fetchUnread();
+  const interval = setInterval(fetchUnread, 10000); 
+  return () => clearInterval(interval); 
+}, []);
 
   const toggle = useCallback(() => {
     if (isMobile) {
@@ -239,6 +260,17 @@ export default function Sidebar() {
                 <Link
                   href={href}
                   id={`nav-${label.toLowerCase()}`}
+                  onClick={async () => {
+                     if (label === "Notifications") {
+                     setUnreadCount(0);
+                     const token = localStorage.getItem("token");
+                     const userId = localStorage.getItem("id");
+                     await fetch(`/api/notifications/read/all/${userId}`, {
+                       method: "PUT",
+                       headers: { Authorization: `Bearer ${token}` },
+                     });
+                    }
+                  }}
                   className={`
                     sb-menu-item flex items-center gap-3 rounded-xl
                     text-[13px] font-medium relative mb-0.5
@@ -262,6 +294,9 @@ export default function Sidebar() {
                         ${active ? "text-white" : "text-gray-400"}`}
                       strokeWidth={active ? 2.2 : 1.8}
                     />
+                     {label === "Notifications" && unreadCount > 0 && (
+                        <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-red-500" />
+                     )}
                   </span>
 
                   {expanded && (

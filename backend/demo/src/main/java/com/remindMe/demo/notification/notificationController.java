@@ -20,12 +20,9 @@ public class notificationController {
             @PathVariable String userId) {
         try {
             List<notificationEntity> notifs = notificationService.getUnread(userId);
-            if (notifs.isEmpty()) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).build(); // 404
-            }
-            return ResponseEntity.ok(notifs); // 200
+            return ResponseEntity.ok(notifs);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build(); // 500
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
@@ -56,12 +53,31 @@ public class notificationController {
             @PathVariable String userId) {
         try {
             List<notificationEntity> notifs = notificationService.getAll(userId);
-            if (notifs.isEmpty()) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).build(); // 404
-            }
-            return ResponseEntity.ok(notifs); // 200
+            return ResponseEntity.ok(notifs);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @DeleteMapping("/{notifId}")
+    public ResponseEntity<Void> deleteNotif(
+          @PathVariable String notifId) {
+        try {
+          notificationService.deleteNotif(notifId);
+          return ResponseEntity.ok().build(); // 200
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build(); // 500
+        }
+    }
+
+    @DeleteMapping("/clear/{userId}")
+    public ResponseEntity<Void> clearAll(
+           @PathVariable String userId) {
+        try {
+          notificationService.clearAll(userId);
+          return ResponseEntity.ok().build(); // 200
+        } catch (Exception e) {
+          return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build(); // 500
         }
     }
 }

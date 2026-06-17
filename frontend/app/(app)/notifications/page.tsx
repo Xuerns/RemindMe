@@ -2,7 +2,7 @@
 import { checkToken } from "@/helper/checkToken";
 import { useRouter } from "next/navigation";
 import { useEffect,useState } from "react";
-import { Bell, BellOff, CheckCheck, Clock, RefreshCw } from "lucide-react";
+import { Bell, BellOff, CheckCheck, Clock, RefreshCw,X} from "lucide-react";
 
 interface Notification {
   id: string;
@@ -13,11 +13,15 @@ interface Notification {
 
 export default function NotificationsPage() {
   const router = useRouter();
-const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [marking, setMarking] = useState(false);
+  const [deleting, setDeleting] = useState<string | null>(null);
+  const [clearing, setClearing] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     if (!checkToken()) {
       router.push("/");
       return;
@@ -29,9 +33,6 @@ const [notifications, setNotifications] = useState<Notification[]>([]);
 
   const fetchNotifications = async () => {
     setLoading(true);
-    console.log("fetch jalan"); // ← tambah ini
-    console.log("userId:", getUserId()); //
-    console.log("token:", localStorage.getItem("token")); 
     try {
       const token = localStorage.getItem("token");
       const userId = getUserId();
@@ -86,6 +87,45 @@ const [notifications, setNotifications] = useState<Notification[]>([]);
     return "normal";
   };
 
+  const deleteNotif = async (notifId: string) => {
+  setDeleting(notifId);
+  try {
+    const token = localStorage.getItem("token");
+    await fetch(`/api/notifications/${notifId}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    await fetchNotifications();
+  } finally {
+    setDeleting(null);
+  }
+};
+
+const clearAll = async () => {
+  setClearing(true);
+  try {
+    const token = localStorage.getItem("token");
+    const userId = getUserId();
+    await fetch(`/api/notifications/clear/${userId}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    setNotifications([]);
+  } finally {
+    setClearing(false);
+  }
+};
+
+  if (!mounted) {
+    return (
+      <div className="min-h-screen bg-surface p-6 md:p-8">
+        <div className="space-y-3">
+          <div className="h-20 rounded-2xl bg-surface-container animate-pulse" />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-surface p-6 md:p-8">
       {/* Header */}
@@ -95,11 +135,6 @@ const [notifications, setNotifications] = useState<Notification[]>([]);
             <h1 className="font-display text-2xl font-bold text-on-surface tracking-tight">
               Notifikasi
             </h1>
-            <p className="text-sm text-on-surface-variant mt-1">
-              {unreadCount > 0
-                ? `${unreadCount} notifikasi belum dibaca`
-                : "Semua notifikasi sudah dibaca"}
-            </p>
           </div>
 
           <div className="flex items-center gap-2">
@@ -115,19 +150,16 @@ const [notifications, setNotifications] = useState<Notification[]>([]);
               <RefreshCw size={15} className={loading ? "animate-spin" : ""} />
             </button>
 
-            {unreadCount > 0 && (
-              <button
-                onClick={markAllRead}
-                disabled={marking}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl
-                           bg-primary text-on-primary text-sm font-medium
-                           hover:bg-inverse-surface transition-all duration-200
-                           disabled:opacity-50"
+            <button
+              onClick={clearAll}
+              disabled={clearing || notifications.length === 0}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl
+                         border border-outline-variant text-sm font-medium
+                         text-on-surface-variant hover:bg-surface-container
+                         transition-all duration-200 disabled:opacity-50"
               >
-                <CheckCheck size={15} />
-                {marking ? "Memproses..." : "Tandai Semua Dibaca"}
+              {clearing ? "Menghapus..." : "Hapus Semua"}
               </button>
-            )}
           </div>
         </div>
       </div>
@@ -164,14 +196,7 @@ const [notifications, setNotifications] = useState<Notification[]>([]);
             return (
               <div
                 key={notif.id}
-                className={`
-                  relative flex items-start gap-4 p-4 rounded-2xl border
-                  transition-all duration-200
-                  ${!notif.sent
-                    ? "bg-surface-container-lowest border-outline-variant/30"
-                    : "bg-surface border-transparent opacity-60"
-                  }
-                `}
+                className="relative flex items-start gap-4 p-4 rounded-2xl border transition-all duration-200 shadow-sm bg-white border-gray-100"
                 style={{ animationDelay: `${i * 50}ms` }}
               >
                 {/* Urgency indicator */}
@@ -195,9 +220,7 @@ const [notifications, setNotifications] = useState<Notification[]>([]);
 
                 {/* Content */}
                 <div className="flex-1 min-w-0">
-                  <p
-                    className={`text-sm leading-relaxed ${!notif.sent ? "text-on-surface font-medium" : "text-on-surface-variant"}`}
-                  >
+                  <p className="text-sm leading-relaxed text-on-surface font-medium">
                     {notif.message}
                   </p>
                   <div className="flex items-center gap-1.5 mt-1.5">
@@ -208,15 +231,22 @@ const [notifications, setNotifications] = useState<Notification[]>([]);
                   </div>
                 </div>
 
-                {/* Unread dot */}
-                {!notif.sent && (
-                  <div className="shrink-0 w-2 h-2 rounded-full bg-primary mt-1" />
-                )}
+                {/* Delete button */}
+                <button
+                  onClick={() => deleteNotif(notif.id)}
+                  disabled={deleting === notif.id}
+                  className="shrink-0 w-7 h-7 rounded-lg flex items-center justify-center
+                             text-outline-variant hover:text-error hover:bg-error/10
+                             transition-all duration-200 disabled:opacity-50"
+                >
+                  <X size={14} />
+                </button>
               </div>
             );
           })}
         </div>
       )}
+
     </div>
   );
 }
