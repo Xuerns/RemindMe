@@ -6,11 +6,9 @@ import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
   CreditCard,
-  Calendar,
   Bell,
   BarChart3,
   User,
-  Settings,
   LogOut,
   ChevronRight,
   X,
@@ -28,7 +26,6 @@ const navItems = [
   { label: "Analytics", href: "/analytics", icon: BarChart3 },
   { label: "Profile", href: "/profile", icon: User },
   { label: "History", href:  "/history", icon: History },
-  { label: "Settings", href: "/settings", icon: Settings },
 ];
 
 const MOBILE_BP = 768;
@@ -121,7 +118,8 @@ export default function Sidebar() {
   }, [isMobile]);
 
   const toggleLogout = async () => {
-    await fetch("/api/logout", { method: "POST" });
+    localStorage.removeItem("token");
+    localStorage.removeItem("id");
     window.location.href = "/";
   };
 

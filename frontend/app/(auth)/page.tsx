@@ -7,26 +7,16 @@ import {
   useEffect,
   type FormEvent,
 } from "react";
-import {
-  Mail,
-  Lock,
-  Eye,
-  EyeOff,
-  Check,
-  X,
-  ArrowRight,
-} from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, Check, X, ArrowRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { jwtDecode } from "jwt-decode";
-
 
 interface ValidationResult {
   valid: boolean;
   message: string;
   type: "error" | "success" | "hint";
 }
-
 
 function validateEmail(value: string): ValidationResult {
   if (!value) return { valid: false, message: "", type: "hint" };
@@ -192,18 +182,18 @@ export default function LoginPage() {
       }
 
       setIsSubmitting(true);
-      
+
       try {
         const apiBase = process.env.NEXT_PUBLIC_API_URL || "/api";
         const res = await fetch(`${apiBase}/auth/login`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email, password }),
-        })
+        });
 
         if (!res.ok) {
           const msg = await res.text();
-          throw new Error(msg)
+          throw new Error(msg);
         }
 
         const response = await res.json();
@@ -215,7 +205,9 @@ export default function LoginPage() {
           const decoded: any = jwtDecode(response.token);
           const userEmail = decoded.sub;
           if (userEmail) {
-            const userRes = await fetch(`${apiBase}/users/by-email?email=${encodeURIComponent(userEmail)}`);
+            const userRes = await fetch(
+              `${apiBase}/users/by-email?email=${encodeURIComponent(userEmail)}`,
+            );
             if (userRes.ok) {
               const userData = await userRes.json();
               if (userData && userData.id) {
@@ -224,7 +216,10 @@ export default function LoginPage() {
             }
           }
         } catch (decodeErr) {
-          console.error("Gagal mendecode token JWT atau mendapatkan user ID:", decodeErr);
+          console.error(
+            "Gagal mendecode token JWT atau mendapatkan user ID:",
+            decodeErr,
+          );
         }
 
         router.push("/dashboard");
@@ -232,7 +227,7 @@ export default function LoginPage() {
         alert("login gagal");
       } finally {
         setIsSubmitting(false);
-      } 
+      }
     },
     [isFormValid, ev.valid, pv.valid, password, email],
   );
@@ -456,53 +451,9 @@ export default function LoginPage() {
               </div>
             </div>
 
-            {/* ──────── REMEMBER / FORGOT ──────── */}
-            <div
-              className="flex justify-between items-center mt-1 animate-fade-in-up opacity-0"
-              style={{ animationDelay: "0.7s" }}
-            >
-              <label
-                id="remember-me"
-                className="flex items-center gap-2.5 cursor-pointer select-none"
-                onClick={() => setRememberMe((p) => !p)}
-              >
-                <div
-                  className={cx(
-                    "w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all duration-300 shrink-0",
-                    rememberMe
-                      ? "border-primary bg-primary"
-                      : "border-outline-variant bg-surface-container-lowest",
-                  )}
-                >
-                  {rememberMe && (
-                    <Check
-                      size={12}
-                      className="text-on-primary animate-check-pop"
-                      strokeWidth={3}
-                    />
-                  )}
-                </div>
-                <span className="text-[13px] text-on-surface-variant font-medium">
-                  Ingat saya
-                </span>
-              </label>
-
-              <a
-                href="#"
-                id="forgot-password-link"
-                className="relative text-[13px] font-semibold text-primary transition-colors duration-250 hover:text-on-surface
-                           after:content-[''] after:absolute after:bottom-[-2px] after:left-0
-                           after:h-[1.5px] after:w-0 after:bg-primary
-                           after:transition-all after:duration-300
-                           hover:after:w-full"
-              >
-                Lupa Password?
-              </a>
-            </div>
-
             {/* ──────── SUBMIT ──────── */}
             <div
-              className="mt-7 animate-fade-in-up opacity-0"
+              className="mt-1 animate-fade-in-up opacity-0"
               style={{ animationDelay: "0.8s" }}
             >
               <button
@@ -612,8 +563,8 @@ export default function LoginPage() {
           <blockquote className="m-0 font-display text-2xl font-semibold text-[#ffffff] leading-[1.5] tracking-[-0.01em]">
             &ldquo;Spotify, Netflix, YouTube Premium, iCloud...
             <br />
-            tanpa sadar, langganan terus bertambah setiap bulannya.
-            Sudah tahu belum, berapa total yang kamu bayar?&rdquo;
+            tanpa sadar, langganan terus bertambah setiap bulannya. Sudah tahu
+            belum, berapa total yang kamu bayar?&rdquo;
           </blockquote>
         </div>
       </div>

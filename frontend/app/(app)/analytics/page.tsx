@@ -1,4 +1,4 @@
-'use client'
+"use client";
 
 import { checkToken } from "@/helper/checkToken";
 import { useRouter } from "next/navigation";
@@ -10,7 +10,8 @@ import {
   Sparkles,
   Layers,
   CreditCard,
-  ChevronDown
+  ChevronDown,
+  LockIcon,
 } from "lucide-react";
 import useCheck from "@/store/useCheck";
 
@@ -52,7 +53,7 @@ const monthsList = [
   { value: 9, label: "September" },
   { value: 10, label: "Oktober" },
   { value: 11, label: "November" },
-  { value: 12, label: "Desember" }
+  { value: 12, label: "Desember" },
 ];
 
 function getCurrentUserId() {
@@ -67,7 +68,7 @@ function getAuthHeaders() {
   const token = getToken();
 
   return {
-    "Authorization": `Bearer ${token}`
+    Authorization: `Bearer ${token}`,
   };
 }
 
@@ -78,14 +79,20 @@ export default function AnalyticsPage() {
 
   // State Manajemen
   const [viewMode, setViewMode] = useState<"monthly" | "yearly">("monthly");
-  const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth() + 1);
-  const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
+  const [selectedMonth, setSelectedMonth] = useState<number>(
+    new Date().getMonth() + 1,
+  );
+  const [selectedYear, setSelectedYear] = useState<number>(
+    new Date().getFullYear(),
+  );
   const [loading, setLoading] = useState<boolean>(true);
   const [exporting, setExporting] = useState<boolean>(false);
   const [reportData, setReportData] = useState<ReportData | null>(null);
 
   // Premium Lock State
-  const [analyticsLocked, setAnalyticsLocked] = useState<"REGULER" | "PREMIUM">("REGULER");
+  const [analyticsLocked, setAnalyticsLocked] = useState<"REGULER" | "PREMIUM">(
+    "REGULER",
+  );
   const [checkingAccess, setCheckingAccess] = useState<boolean>(true);
 
   // CDN Chart.js Load State
@@ -145,7 +152,7 @@ export default function AnalyticsPage() {
     try {
       const res = await fetch(`${API_BASE}/access?userId=${userId}`, {
         method: "GET",
-        headers: getAuthHeaders()
+        headers: getAuthHeaders(),
       });
 
       if (!res.ok) {
@@ -154,7 +161,7 @@ export default function AnalyticsPage() {
         } else {
           setAnalyticsLocked("PREMIUM");
         }
-        
+
         setCheckingAccess(false);
         return false;
       }
@@ -177,23 +184,23 @@ export default function AnalyticsPage() {
     }
   }, [status]);
 
- const verifyPremium = async () => {
-      const userId = getCurrentUserId();
-      const token = getToken();
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/users/${userId}/check`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          },
-        );
+  const verifyPremium = async () => {
+    const userId = getCurrentUserId();
+    const token = getToken();
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/api/users/${userId}/check`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    );
 
-        const data = await res.json();
-        if (data === true) {
-            checkPremium("PREMIUM");
-        }
-      };
+    const data = await res.json();
+    if (data === true) {
+      checkPremium("PREMIUM");
+    }
+  };
 
   // 3. Mengambil Data Laporan dari Backend
   const fetchReportData = useCallback(async () => {
@@ -223,7 +230,7 @@ export default function AnalyticsPage() {
 
     try {
       const res = await fetch(url, {
-        headers: getAuthHeaders()
+        headers: getAuthHeaders(),
       });
 
       if (!res.ok) {
@@ -273,7 +280,7 @@ export default function AnalyticsPage() {
           "#F59E0B",
           "#EF4444",
           "#EC4899",
-          "#8B5CF6"
+          "#8B5CF6",
         ];
 
         donutChartInstanceRef.current = new ChartClass(ctx, {
@@ -283,12 +290,15 @@ export default function AnalyticsPage() {
             datasets: [
               {
                 data: values.length > 0 ? values : [0],
-                backgroundColor: values.length > 0 ? donutColors.slice(0, labels.length) : ["#E5E7EB"],
+                backgroundColor:
+                  values.length > 0
+                    ? donutColors.slice(0, labels.length)
+                    : ["#E5E7EB"],
                 borderWidth: 3,
                 borderColor: "#ffffff",
-                hoverOffset: 12
-              }
-            ]
+                hoverOffset: 12,
+              },
+            ],
           },
           options: {
             responsive: true,
@@ -304,14 +314,18 @@ export default function AnalyticsPage() {
                   font: {
                     family: "'Inter', sans-serif",
                     weight: 500,
-                    size: 11
+                    size: 11,
                   },
-                  color: "#1e293b"
-                }
+                  color: "#1e293b",
+                },
               },
               tooltip: {
                 backgroundColor: "#0f172a",
-                titleFont: { family: "'Inter', sans-serif", size: 13, weight: "bold" },
+                titleFont: {
+                  family: "'Inter', sans-serif",
+                  size: 13,
+                  weight: "bold",
+                },
                 bodyFont: { family: "'Inter', sans-serif", size: 12 },
                 padding: 12,
                 cornerRadius: 12,
@@ -321,11 +335,11 @@ export default function AnalyticsPage() {
                     const label = context.label || "";
                     const value = context.parsed || 0;
                     return ` ${label}: Rp ${value.toLocaleString("id-ID")}`;
-                  }
-                }
-              }
-            }
-          }
+                  },
+                },
+              },
+            },
+          },
         });
       }
     }
@@ -354,24 +368,29 @@ export default function AnalyticsPage() {
               {
                 label: "Harga Langganan (Rp)",
                 data: values.length > 0 ? values : [0],
-                backgroundColor: values.length > 0 ? gradient : "rgba(229, 231, 235, 0.5)",
+                backgroundColor:
+                  values.length > 0 ? gradient : "rgba(229, 231, 235, 0.5)",
                 borderColor: values.length > 0 ? "#7C3AED" : "#D1D5DB",
                 borderWidth: 1.5,
                 borderRadius: 8,
-                barThickness: 26
-              }
-            ]
+                barThickness: 26,
+              },
+            ],
           },
           options: {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
               legend: {
-                display: false
+                display: false,
               },
               tooltip: {
                 backgroundColor: "#0f172a",
-                titleFont: { family: "'Inter', sans-serif", size: 13, weight: "bold" },
+                titleFont: {
+                  family: "'Inter', sans-serif",
+                  size: 13,
+                  weight: "bold",
+                },
                 bodyFont: { family: "'Inter', sans-serif", size: 12 },
                 padding: 12,
                 cornerRadius: 12,
@@ -379,15 +398,15 @@ export default function AnalyticsPage() {
                   // eslint-disable-next-line @typescript-eslint/no-explicit-any
                   label: function (context: any) {
                     return ` Harga: Rp ${context.parsed.y.toLocaleString("id-ID")}`;
-                  }
-                }
-              }
+                  },
+                },
+              },
             },
             scales: {
               y: {
                 beginAtZero: true,
                 grid: {
-                  color: "#f1f5f9"
+                  color: "#f1f5f9",
                 },
                 ticks: {
                   font: { family: "'Inter', sans-serif", size: 10 },
@@ -395,23 +414,23 @@ export default function AnalyticsPage() {
                   // eslint-disable-next-line @typescript-eslint/no-explicit-any
                   callback: function (value: any) {
                     if (value >= 1000) {
-                      return (value / 1000) + "k";
+                      return value / 1000 + "k";
                     }
                     return value;
-                  }
-                }
+                  },
+                },
               },
               x: {
                 grid: {
-                  display: false
+                  display: false,
                 },
                 ticks: {
                   font: { family: "'Inter', sans-serif", size: 10 },
-                  color: "#64748b"
-                }
-              }
-            }
-          }
+                  color: "#64748b",
+                },
+              },
+            },
+          },
         });
       }
     }
@@ -448,11 +467,13 @@ export default function AnalyticsPage() {
 
     try {
       const res = await fetch(url, {
-        headers: getAuthHeaders()
+        headers: getAuthHeaders(),
       });
 
       if (!res.ok) {
-        alert("Fitur ekspor PDF gagal karena API backend offline atau bermasalah.");
+        alert(
+          "Fitur ekspor PDF gagal karena API backend offline atau bermasalah.",
+        );
         return;
       }
 
@@ -466,7 +487,9 @@ export default function AnalyticsPage() {
       link.click();
       document.body.removeChild(link);
     } catch {
-      alert("Fitur ekspor PDF gagal karena API backend offline. Harap nyalakan server Spring Boot.");
+      alert(
+        "Fitur ekspor PDF gagal karena API backend offline. Harap nyalakan server Spring Boot.",
+      );
     } finally {
       setExporting(false);
     }
@@ -498,10 +521,16 @@ export default function AnalyticsPage() {
         padding: "36px 40px",
         color: "#0D1C2E",
         position: "relative",
-        overflow: "hidden"
+        overflow: "hidden",
       }}
     >
-      <div className={analyticsLocked !== "PREMIUM" && !checkingAccess ? "pointer-events-none select-none blur-sm transition duration-300" : "transition duration-300"}>
+      <div
+        className={
+          analyticsLocked !== "PREMIUM" && !checkingAccess
+            ? "pointer-events-none select-none blur-sm transition duration-300"
+            : "transition duration-300"
+        }
+      >
         <link
           href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap"
           rel="stylesheet"
@@ -515,7 +544,8 @@ export default function AnalyticsPage() {
               Analytics Insight
             </h1>
             <p className="text-slate-500 mt-2 text-sm max-w-lg m-0">
-              Analisis portofolio keuangan dan visualisasi langganan digital Anda dalam satu laporan terpadu yang memukau.
+              Analisis portofolio keuangan dan visualisasi langganan digital
+              Anda dalam satu laporan terpadu yang memukau.
             </p>
           </div>
 
@@ -602,9 +632,14 @@ export default function AnalyticsPage() {
               <CreditCard className="w-6 h-6" />
             </div>
             <div>
-              <span className="text-slate-400 text-xs font-bold tracking-wider uppercase block">Total Pengeluaran</span>
+              <span className="text-slate-400 text-xs font-bold tracking-wider uppercase block">
+                Total Pengeluaran
+              </span>
               <span className="font-display text-2xl font-extrabold text-slate-800 mt-1 block">
-                Rp {reportData ? Number(reportData.monthlyTotal).toLocaleString("id-ID") : 0}
+                Rp{" "}
+                {reportData
+                  ? Number(reportData.monthlyTotal).toLocaleString("id-ID")
+                  : 0}
               </span>
               <span className="text-[10px] text-slate-400 mt-1 block font-medium">
                 Periode: {viewMode === "monthly" ? "Per Bulan" : "Per Tahun"}
@@ -618,9 +653,14 @@ export default function AnalyticsPage() {
               <Layers className="w-6 h-6" />
             </div>
             <div>
-              <span className="text-slate-400 text-xs font-bold tracking-wider uppercase block">Layanan Aktif</span>
+              <span className="text-slate-400 text-xs font-bold tracking-wider uppercase block">
+                Layanan Aktif
+              </span>
               <span className="font-display text-2xl font-extrabold text-slate-800 mt-1 block">
-                {reportData?.subscriptions ? reportData.subscriptions.length : 0} Subscriptions
+                {reportData?.subscriptions
+                  ? reportData.subscriptions.length
+                  : 0}{" "}
+                Subscriptions
               </span>
               <span className="text-[10px] text-emerald-600 font-semibold mt-1 block">
                 Optimized & Tracked
@@ -634,7 +674,9 @@ export default function AnalyticsPage() {
               <TrendingUp className="w-6 h-6" />
             </div>
             <div>
-              <span className="text-slate-400 text-xs font-bold tracking-wider uppercase block">Kategori Terbesar</span>
+              <span className="text-slate-400 text-xs font-bold tracking-wider uppercase block">
+                Kategori Terbesar
+              </span>
               <span className="font-display text-2xl font-extrabold text-slate-800 mt-1 block">
                 {getTopCategory()}
               </span>
@@ -650,14 +692,19 @@ export default function AnalyticsPage() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-8">
           <div className="bg-white rounded-3xl border border-slate-100 p-6 shadow-sm lg:col-span-5 flex flex-col justify-between">
             <div>
-              <h3 className="font-display text-lg font-bold text-slate-800 m-0">Kategori Breakdown</h3>
+              <h3 className="font-display text-lg font-bold text-slate-800 m-0">
+                Kategori Breakdown
+              </h3>
               <p className="text-slate-400 text-xs mt-1 mb-6 m-0">
-                Persentase pengeluaran langganan Anda berdasarkan kategori pelayanan.
+                Persentase pengeluaran langganan Anda berdasarkan kategori
+                pelayanan.
               </p>
             </div>
             <div className="relative h-64 w-full flex items-center justify-center">
               {loading ? (
-                <div className="text-slate-400 text-sm">Menyusun bagan kategori...</div>
+                <div className="text-slate-400 text-sm">
+                  Menyusun bagan kategori...
+                </div>
               ) : (
                 <canvas ref={donutCanvasRef} />
               )}
@@ -666,14 +713,19 @@ export default function AnalyticsPage() {
 
           <div className="bg-white rounded-3xl border border-slate-100 p-6 shadow-sm lg:col-span-7 flex flex-col justify-between">
             <div>
-              <h3 className="font-display text-lg font-bold text-slate-800 m-0">Skala Perbandingan Harga</h3>
+              <h3 className="font-display text-lg font-bold text-slate-800 m-0">
+                Skala Perbandingan Harga
+              </h3>
               <p className="text-slate-400 text-xs mt-1 mb-6 m-0">
-                Perbandingan kontribusi pengeluaran tiap-tiap layanan langganan secara individual.
+                Perbandingan kontribusi pengeluaran tiap-tiap layanan langganan
+                secara individual.
               </p>
             </div>
             <div className="relative h-64 w-full flex items-center justify-center">
               {loading ? (
-                <div className="text-slate-400 text-sm">Menyusun skala perbandingan...</div>
+                <div className="text-slate-400 text-sm">
+                  Menyusun skala perbandingan...
+                </div>
               ) : (
                 <canvas ref={barCanvasRef} />
               )}
@@ -686,18 +738,27 @@ export default function AnalyticsPage() {
           <div className="bg-white rounded-3xl border border-slate-100 p-6 shadow-sm lg:col-span-4 flex flex-col relative overflow-hidden">
             <div className="flex items-center gap-2 mb-4">
               <Sparkles className="w-5 h-5 text-violet-600 animate-bounce" />
-              <h3 className="font-display text-lg font-bold text-slate-800 m-0">Tips Menghemat Cerdas</h3>
+              <h3 className="font-display text-lg font-bold text-slate-800 m-0">
+                Tips Menghemat Cerdas
+              </h3>
             </div>
             <p className="text-slate-400 text-xs mb-4 m-0 leading-relaxed">
-              AI-like tips otomatis yang didesain secara adaptif berdasarkan analisis pengeluaran periode ini:
+              AI-like tips otomatis yang didesain secara adaptif berdasarkan
+              analisis pengeluaran periode ini:
             </p>
 
             <div className="flex-1 flex flex-col gap-3 justify-center">
               {loading ? (
-                <div className="text-slate-400 text-xs">Menganalisis langganan Anda...</div>
-              ) : reportData?.savingsTips && reportData.savingsTips.length > 0 ? (
+                <div className="text-slate-400 text-xs">
+                  Menganalisis langganan Anda...
+                </div>
+              ) : reportData?.savingsTips &&
+                reportData.savingsTips.length > 0 ? (
                 reportData.savingsTips.map((tip, idx) => (
-                  <div key={idx} className="p-3 bg-violet-50/50 border border-violet-100 rounded-2xl flex items-start gap-2.5 text-xs text-violet-950 leading-relaxed font-medium">
+                  <div
+                    key={idx}
+                    className="p-3 bg-violet-50/50 border border-violet-100 rounded-2xl flex items-start gap-2.5 text-xs text-violet-950 leading-relaxed font-medium"
+                  >
                     <div className="w-1.5 h-1.5 rounded-full bg-violet-600 mt-1.5 shrink-0" />
                     <div>{tip}</div>
                   </div>
@@ -713,13 +774,19 @@ export default function AnalyticsPage() {
           <div className="bg-white rounded-3xl border border-slate-100 p-6 shadow-sm lg:col-span-8">
             <div className="flex justify-between items-center mb-4">
               <div>
-                <h3 className="font-display text-lg font-bold text-slate-800 m-0">Layanan Kontributor</h3>
+                <h3 className="font-display text-lg font-bold text-slate-800 m-0">
+                  Layanan Kontributor
+                </h3>
                 <p className="text-slate-400 text-xs mt-1 m-0">
-                  Layanan aktif yang berkontribusi pada neraca pengeluaran periode ini.
+                  Layanan aktif yang berkontribusi pada neraca pengeluaran
+                  periode ini.
                 </p>
               </div>
               <span className="px-3 py-1 bg-violet-50 text-violet-700 rounded-full text-[10px] font-bold tracking-wider uppercase">
-                {reportData?.subscriptions ? reportData.subscriptions.length : 0} Layanan
+                {reportData?.subscriptions
+                  ? reportData.subscriptions.length
+                  : 0}{" "}
+                Layanan
               </span>
             </div>
 
@@ -727,30 +794,47 @@ export default function AnalyticsPage() {
               <table className="w-full border-collapse text-left text-xs">
                 <thead>
                   <tr className="border-b border-slate-100">
-                    {["Nama Layanan", "Kategori", "Billing Date", "Harga"].map((col) => (
-                      <th key={col} className="pb-3 text-slate-400 font-bold uppercase tracking-wider text-[10px]">
-                        {col}
-                      </th>
-                    ))}
+                    {["Nama Layanan", "Kategori", "Billing Date", "Harga"].map(
+                      (col) => (
+                        <th
+                          key={col}
+                          className="pb-3 text-slate-400 font-bold uppercase tracking-wider text-[10px]"
+                        >
+                          {col}
+                        </th>
+                      ),
+                    )}
                   </tr>
                 </thead>
                 <tbody>
                   {loading ? (
                     <tr>
-                      <td colSpan={4} className="py-8 text-center text-slate-400">
+                      <td
+                        colSpan={4}
+                        className="py-8 text-center text-slate-400"
+                      >
                         Memuat rincian layanan...
                       </td>
                     </tr>
-                  ) : !reportData?.subscriptions || reportData.subscriptions.length === 0 ? (
+                  ) : !reportData?.subscriptions ||
+                    reportData.subscriptions.length === 0 ? (
                     <tr>
-                      <td colSpan={4} className="py-8 text-center text-slate-400">
+                      <td
+                        colSpan={4}
+                        className="py-8 text-center text-slate-400"
+                      >
                         Tidak ada kontributor layanan pada periode ini.
                       </td>
                     </tr>
                   ) : (
                     reportData.subscriptions.map((sub) => (
-                      <tr key={sub.id} className="border-b border-slate-50 last:border-0 hover:bg-slate-50/50 transition">
-                        <td className="py-3 font-semibold text-slate-800">{sub.name}</td>
+                      <tr
+                        key={sub.id}
+                        className="border-b border-slate-50 last:border-0 hover:bg-slate-50/50 transition"
+                      >
+                        <td className="py-3 font-semibold text-slate-800">
+                          {sub.name}
+                        </td>
                         <td className="py-3">
                           <span className="px-2.5 py-1 bg-slate-100 text-slate-600 rounded-full font-medium text-[10px]">
                             {sub.category}
@@ -761,7 +845,7 @@ export default function AnalyticsPage() {
                             ? new Date(sub.duDate).toLocaleDateString("id-ID", {
                                 day: "numeric",
                                 month: "short",
-                                year: "numeric"
+                                year: "numeric",
                               })
                             : "-"}
                         </td>
@@ -782,7 +866,7 @@ export default function AnalyticsPage() {
         <div className="absolute inset-0 z-50 flex items-center justify-center bg-white/45 backdrop-blur-[2px]">
           <div className="mx-4 max-w-md rounded-[28px] border border-slate-100 bg-white p-10 text-center shadow-2xl">
             <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-slate-100 text-4xl">
-              🔒
+              <LockIcon size={32}/>
             </div>
 
             <h2 className="text-3xl font-extrabold text-slate-900">
@@ -790,8 +874,8 @@ export default function AnalyticsPage() {
             </h2>
 
             <p className="mt-4 text-sm leading-7 text-slate-500">
-              Upgrade ke Premium untuk membuka grafik pengeluaran, ringkasan kategori,
-              insight penghematan, dan export report.
+              Upgrade ke Premium untuk membuka grafik pengeluaran, ringkasan
+              kategori, insight penghematan, dan export report.
             </p>
 
             <button
