@@ -9,7 +9,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -38,15 +37,15 @@ public class reportService {
 
     @Transactional
     public reportEntity getMonthlyReport(String userId, int month, int year) {
-        userEntity user = getUserOrThrow(userId);
-        validateAnalyticsAccess(user);
+        userEntity user = getUserOrThrow(userId);// ngambil data user dari satabase
+        validateAnalyticsAccess(user); // ngecek apakah user bisa akses analytics, kalau gak bisa bakal lempar error 403
 
-        List<subscriptionEntity> filteredSubscriptions = subscriptionRepository.findByUserIdOrderByDuDate(userId)
+        List<subscriptionEntity> filteredSubscriptions = subscriptionRepository.findByUserIdOrderByDuDate(userId) //Ambil data subscription dari database
                 .stream()
-                .filter(subscription -> subscription.isActive())
-                .filter(subscription -> subscription.getDuDate() != null)
+                .filter(subscription -> subscription.isActive()) // Hanya subscription aktif yang dihitung.
+                .filter(subscription -> subscription.getDuDate() != null) // Tanggal jatuh tempo tidak boleh kosong.
                 .filter(subscription -> subscription.getDuDate().getMonthValue() == month
-                        && subscription.getDuDate().getYear() == year)
+                        && subscription.getDuDate().getYear() == year) // Hanya subscription yang bulan dan tahunnya sesuai dengan filter Analytics.
                 .toList();
 
         return saveOrUpdateReport(user, month, year, filteredSubscriptions);
@@ -78,23 +77,6 @@ public class reportService {
         return getMonthlyReport(userId, month, year).getSavingsTips();
     }
 
-    @Transactional
-    public File exportPdf(String userId) {
-        int currentYear = java.time.LocalDate.now().getYear();
-        int currentMonth = java.time.LocalDate.now().getMonthValue();
-
-        return exportPdf(userId, currentMonth, currentYear);
-    }
-
-    @Transactional
-    public File exportPdf(String userId, int month, int year) {
-        userEntity user = getUserOrThrow(userId);
-        validateExportAccess(user);
-
-        reportEntity report = getMonthlyReport(userId, month, year);
-        return report.exportToPdf();
-    }
-
     private userEntity getUserOrThrow(String userId) {
         return userRepository.findById(userId)
                 .orElseThrow(() -> new ResponseStatusException(
@@ -108,15 +90,6 @@ public class reportService {
             throw new ResponseStatusException(
                     HttpStatus.FORBIDDEN,
                     "Fitur Analytics hanya tersedia untuk Premium User."
-            );
-        }
-    }
-
-    private void validateExportAccess(userEntity user) {
-        if (!user.canExportReport()) {
-            throw new ResponseStatusException(
-                    HttpStatus.FORBIDDEN,
-                    "Export report hanya tersedia untuk Premium User."
             );
         }
     }

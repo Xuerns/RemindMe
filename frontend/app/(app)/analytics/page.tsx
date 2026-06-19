@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   BarChart3,
-  Download,
   TrendingUp,
   Sparkles,
   Layers,
@@ -17,7 +16,7 @@ import useCheck from "@/store/useCheck";
 
 const API_BASE = "http://localhost:8080/api/reports";
 
-// Definisi Interface Data Laporan
+// bentuk data laporan yang diterima dari backend
 interface SubscriptionEntity {
   id: string;
   name: string;
@@ -63,7 +62,7 @@ function getCurrentUserId() {
 function getToken() {
   return localStorage.getItem("token") || "";
 }
-
+//fungsi nya agar Token dikirim agar backend bisa memastikan request berasal dari user yang sudah login
 function getAuthHeaders() {
   const token = getToken();
 
@@ -86,7 +85,6 @@ export default function AnalyticsPage() {
     new Date().getFullYear(),
   );
   const [loading, setLoading] = useState<boolean>(true);
-  const [exporting, setExporting] = useState<boolean>(false);
   const [reportData, setReportData] = useState<ReportData | null>(null);
 
   // Premium Lock State
@@ -108,7 +106,7 @@ export default function AnalyticsPage() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const barChartInstanceRef = useRef<any>(null);
 
-  // 1. Memuat Script Chart.js Secara Dinamis
+  
   useEffect(() => {
     if (typeof window !== "undefined") {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -134,38 +132,40 @@ export default function AnalyticsPage() {
     }
     verifyPremium();
   }, [router, status]);
-
+  // pengecekan akses analytics berdasarkan status premium atau reguler, jika tidak ada token maka akses analytics akan terkunci dan diarahkan untuk upgrade ke premium, jika ada token maka akan dicek ke backend apakah user tersebut memiliki akses analytics atau tidak, jika tidak maka akses analytics akan terkunci sesuai dengan status user (reguler atau premium)
   const checkAnalyticsAccess = useCallback(async () => {
     const userId = getCurrentUserId();
     const token = getToken();
-
+    // kalau userId atau token tidak ada, proses akses dihentikan.
     if (!userId || !token) {
       if (status !== "PREMIUM") {
         setAnalyticsLocked("REGULER");
       } else {
         setAnalyticsLocked("PREMIUM");
       }
+      // memberhentikan proses pengecekan akses analytics
       setCheckingAccess(false);
       return false;
     }
-
+    // cek akses analytics, boleh atau tidak
     try {
+      // pengambilan API
       const res = await fetch(`${API_BASE}/access?userId=${userId}`, {
         method: "GET",
         headers: getAuthHeaders(),
       });
-
+      // jika pengambilan API gagal
       if (!res.ok) {
         if (status !== "PREMIUM") {
           setAnalyticsLocked("REGULER");
         } else {
           setAnalyticsLocked("PREMIUM");
         }
-
+        //menghentikan proses akses analytics
         setCheckingAccess(false);
         return false;
       }
-
+      // jika pengambilan AI berhasil
       if (status !== "PREMIUM") {
         setAnalyticsLocked("REGULER");
       } else {
@@ -181,20 +181,20 @@ export default function AnalyticsPage() {
       }
       setCheckingAccess(false);
       return false;
-    }
-  }, [status]);
-
-  const verifyPremium = async () => {
-    const userId = getCurrentUserId();
-    const token = getToken();
-    const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/api/users/${userId}/check`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      },
-    );
+    } // bedanya try dan catch adalah try berhasil menghubungi backend dan catch gagal hubungi backend. outputnya sama yaitu stop checking akses
+  }, [status]); 
+  // cek apakah user premium/tidak
+ const verifyPremium = async () => {
+      const userId = getCurrentUserId();
+      const token = getToken();
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/users/${userId}/check`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          },
+        );
 
     const data = await res.json();
     if (data === true) {
@@ -238,7 +238,7 @@ export default function AnalyticsPage() {
         setReportData(null);
         return;
       }
-
+      // stelah backend response, akan disimpan ke state reportData
       const data: ReportData = await res.json();
       setReportData(data);
     } catch (err) {
@@ -446,55 +446,6 @@ export default function AnalyticsPage() {
     };
   }, [chartJsLoaded, reportData, analyticsLocked]);
 
-  // 5. Fungsi Ekspor PDF Dinamis
-  const handleExportPdf = async () => {
-    if (analyticsLocked) {
-      alert("Export report hanya tersedia untuk Premium User.");
-      return;
-    }
-
-    const canAccess = await checkAnalyticsAccess();
-
-    if (!canAccess) {
-      alert("Export report hanya tersedia untuk Premium User.");
-      return;
-    }
-
-    setExporting(true);
-
-    const userId = getCurrentUserId();
-    const url = `${API_BASE}/export-pdf?userId=${userId}&month=${selectedMonth}&year=${selectedYear}`;
-
-    try {
-      const res = await fetch(url, {
-        headers: getAuthHeaders(),
-      });
-
-      if (!res.ok) {
-        alert(
-          "Fitur ekspor PDF gagal karena API backend offline atau bermasalah.",
-        );
-        return;
-      }
-
-      const blob = await res.blob();
-      const downloadUrl = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-
-      link.href = downloadUrl;
-      link.download = `report-${userId}-${selectedMonth}-${selectedYear}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    } catch {
-      alert(
-        "Fitur ekspor PDF gagal karena API backend offline. Harap nyalakan server Spring Boot.",
-      );
-    } finally {
-      setExporting(false);
-    }
-  };
-
   const getTopCategory = () => {
     if (!reportData || !reportData.summaryByCategory) return "-";
 
@@ -605,23 +556,6 @@ export default function AnalyticsPage() {
               <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
             </div>
 
-            <button
-              onClick={handleExportPdf}
-              disabled={exporting}
-              className="flex items-center gap-2 px-5 py-2.5 bg-slate-900 text-white border-none rounded-2xl text-xs font-bold shadow-md cursor-pointer hover:bg-slate-700 transition-all duration-300 disabled:opacity-50"
-            >
-              {exporting ? (
-                <>
-                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Mengekspor...
-                </>
-              ) : (
-                <>
-                  <Download className="w-4 h-4" />
-                  Ekspor Laporan PDF
-                </>
-              )}
-            </button>
           </div>
         </div>
 
