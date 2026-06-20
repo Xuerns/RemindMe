@@ -115,7 +115,7 @@ export default function SubscriptionPage() {
 
   const [userType, setUserType] = useState<string>("");
   const [showUpgradeModal, setShowUpgradeModal] = useState<boolean>(false);
-  const [mounted, setMounted] = useState<boolean>(false);
+  const [hoveredOption, setHoveredOption] = useState<String>("");
 
   async function fetchAll(): Promise<void> {
     setLoading(true);
@@ -146,10 +146,7 @@ export default function SubscriptionPage() {
     setLoading(false);
   }
 
-  useEffect(() => {
-    setMounted(true);
-    fetchAll();
-  }, []);
+  useEffect(() => { fetchAll(); }, []);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -206,8 +203,8 @@ export default function SubscriptionPage() {
       };
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/subscriptions/add`, { method: "POST", headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" }, body: JSON.stringify(payload) });
       if (!res.ok) {
-          const errData = await res.json().catch(() => null);
-          throw new Error(errData?.error ? `Gagal: ${errData.error} (Cause: ${errData.cause})` : "Gagal menambahkan subscription.");
+        const errData = await res.json().catch(() => null);
+        throw new Error(errData?.error ? `Gagal: ${errData.error} (Cause: ${errData.cause})` : "Gagal menambahkan subscription.");
       }
       setShowAddModal(false);
       setAddForm({ name: "", category: "", duDate: "", price: "", period: "THREE_MONTH" });
@@ -281,14 +278,6 @@ export default function SubscriptionPage() {
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
   const activeFilterCount = (filterStatus ? 1 : 0) + (filterPeriod ? 1 : 0);
 
-  if (!mounted) {
-    return (
-      <div style={{ fontFamily: "'DM Sans', sans-serif", minHeight: "100vh", background: "#F8F7FC", padding: "32px 36px", color: "#1A1523" }}>
-        <div style={{ color: "#9CA3AF" }}>Loading page...</div>
-      </div>
-    );
-  }
-
   return (
     <div style={{ fontFamily: "'DM Sans',sans-serif", minHeight: "100vh", background: "#F8F7FC", padding: "32px 36px", color: "#1A1523" }}>
       <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -330,8 +319,16 @@ export default function SubscriptionPage() {
                   {filterHover === "status" && (
                     <div style={{ position: "absolute", right: "100%", top: 0, background: "#fff", borderRadius: 12, boxShadow: "0 8px 32px rgba(0,0,0,0.12)", border: "1px solid #F1F0F5", minWidth: 140, zIndex: 201 }}>
                       {[{ value: "", label: "Semua" }, { value: "PAID", label: "● Paid" }, { value: "UPCOMING", label: "● Upcoming" }].map(opt => (
-                        <div key={opt.value} onClick={() => { setFilterStatus(opt.value); setPage(0); setShowFilterMenu(false); setFilterHover(null); }}
-                          style={{ padding: "10px 16px", fontSize: 13, cursor: "pointer", background: filterStatus === opt.value ? "#F5F3FF" : "transparent", color: filterStatus === opt.value ? "#7C3AED" : opt.value === "PAID" ? "#059669" : opt.value === "UPCOMING" ? "#D97706" : "#374151", fontWeight: filterStatus === opt.value ? 600 : 400, borderRadius: 8 }}>
+                        <div key={opt.value}
+                          onMouseEnter={() => setHoveredOption(opt.value)}
+                          onMouseLeave={() => setHoveredOption("")}
+                          onClick={() => { setFilterStatus(opt.value); setPage(0); setShowFilterMenu(false); setFilterHover(null); }}
+                          style={{
+                            padding: "10px 16px", fontSize: 13, cursor: "pointer",
+                            background: filterStatus === opt.value ? "#F5F3FF" : hoveredOption === opt.value ? "#F3F4F6" : "transparent",
+                            color: filterStatus === opt.value ? "#7C3AED" : opt.value === "PAID" ? "#059669" : opt.value === "UPCOMING" ? "#D97706" : "#374151",
+                            fontWeight: filterStatus === opt.value ? 600 : 400, borderRadius: 8
+                          }}>
                           {opt.label}
                         </div>
                       ))}
@@ -348,8 +345,16 @@ export default function SubscriptionPage() {
                   {filterHover === "period" && (
                     <div style={{ position: "absolute", right: "100%", top: 0, background: "#fff", borderRadius: 12, boxShadow: "0 8px 32px rgba(0,0,0,0.12)", border: "1px solid #F1F0F5", minWidth: 140, zIndex: 201 }}>
                       {[{ value: "", label: "Semua" }, { value: "ONE_MINUTE", label: "1 Days" }, { value: "ONE_MONTH", label: "1 Month" }, { value: "THREE_MONTH", label: "3 Month" }, { value: "SIX_MONTH", label: "6 Month" }, { value: "TWELVE_MONTH", label: "12 Month" }].map(opt => (
-                        <div key={opt.value} onClick={() => { setFilterPeriod(opt.value); setPage(0); setShowFilterMenu(false); setFilterHover(null); }}
-                          style={{ padding: "10px 16px", fontSize: 13, cursor: "pointer", background: filterPeriod === opt.value ? "#F5F3FF" : "transparent", color: filterPeriod === opt.value ? "#7C3AED" : "#374151", fontWeight: filterPeriod === opt.value ? 600 : 400, borderRadius: 8 }}>
+                        <div key={opt.value}
+                          onMouseEnter={() => setHoveredOption(opt.value)}
+                          onMouseLeave={() => setHoveredOption("")}
+                          onClick={() => { setFilterPeriod(opt.value); setPage(0); setShowFilterMenu(false); setFilterHover(null); }}
+                          style={{
+                            padding: "10px 16px", fontSize: 13, cursor: "pointer",
+                            background: filterPeriod === opt.value ? "#F5F3FF" : hoveredOption === opt.value ? "#F3F4F6" : "transparent",
+                            color: filterPeriod === opt.value ? "#7C3AED" : "#374151",
+                            fontWeight: filterPeriod === opt.value ? 600 : 400, borderRadius: 8
+                          }}>
                           {opt.label}
                         </div>
                       ))}
