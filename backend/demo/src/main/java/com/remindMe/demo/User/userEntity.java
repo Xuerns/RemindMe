@@ -94,5 +94,4 @@ public abstract class userEntity {
 
     public abstract int getMaxSubscriptions();
 
-    public abstract boolean canExportReport();
 }

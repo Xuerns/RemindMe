@@ -596,7 +596,7 @@ export default function DashboardPage() {
                   RemindMe Premium
                 </h3>
                 <p className="mt-3 text-xs leading-relaxed text-slate-300">
-                  Semua fitur analisis pengeluaran penuh dan ekspor laporan PDF
+                  Semua fitur analisis pengeluaran telah penuh
                   bulanan aktif sepenuhnya.
                 </p>
               </div>
@@ -630,8 +630,7 @@ export default function DashboardPage() {
                   Upgrade Premium
                 </h3>
                 <p className="mt-3 text-xs leading-relaxed text-[#655b68]">
-                  Buka fitur visualisasi analisis pengeluaran mendalam dan
-                  ekspor laporan PDF bulanan Anda sekarang.
+                  Buka fitur visualisasi analisis pengeluaran bulanan Anda sekarang.
                 </p>
               </div>
               <div className="mt-6">

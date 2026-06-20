@@ -63,8 +63,9 @@ public class JwtAuthService implements AuthService {
     }
 
     @Override
-    public void logout() {
-
+    public String logout() {
+        // Jujur bingung mau apa, jadi kirim message aja
+        return "Logout berhasil";
     }
 
     @Override

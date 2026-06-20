@@ -29,11 +29,6 @@ public class premiumUser extends userEntity {
     public int getMaxSubscriptions() {
         return Integer.MAX_VALUE; // Ini nilainya unlimited, mungkin masih mau didiskusikan apakah ada batasanya atau engga
     }
-
-    @Override
-    public boolean canExportReport() {
-        return true; // Ini fitur masih 50 / 50, kalau keburu mungkin bisa kita implementasiin
-    }
     
     public boolean isPremiumActive() {
         LocalDate today = LocalDate.now();

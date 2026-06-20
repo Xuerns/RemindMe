@@ -21,5 +21,5 @@ public interface reportRepository extends JpaRepository<reportEntity, String> {
     @Modifying
     @Transactional
     @Query(value= "DELETE FROM report_subscriptions WHERE subscription_id = :subscriptionId", nativeQuery = true)
-    void deleteBySubscriptionId(@Param("SubscriptionId") String SubscriptionId);
+    void deleteBySubscriptionId(@Param("subscriptionId") String SubscriptionId);
 }

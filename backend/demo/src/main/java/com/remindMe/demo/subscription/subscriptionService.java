@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import com.remindMe.demo.subscription.DTO.subscriptionRequest;
 import com.remindMe.demo.User.userRepository;
 import com.remindMe.demo.notification.notificationService;
+import com.remindMe.demo.report.reportRepository;
 import com.remindMe.demo.User.userEntity;
 import com.remindMe.demo.history.historyService;
 import com.remindMe.demo.history.historyEntity;
@@ -24,6 +25,7 @@ public class subscriptionService {
     private final userRepository userRepo;
     private final notificationService notificationService;
     private final historyService historyService;
+    private final reportRepository reportRepository;
 
     // ─── HELPER: Hitung endDate berdasarkan periode ───────────────────────────
     public LocalDate calculateEndDate(LocalDate startDate, subscriptionEntity.periodSubs period) {
@@ -198,8 +200,9 @@ public class subscriptionService {
         try { recordHistory(sub, user, historyEntity.statusHistory.CANCELED); } catch (Exception e) {
             System.out.println("[WARN] Gagal mencatat history delete: " + e.getMessage());
         }
+        reportRepository.deleteBySubscriptionId(sub.getId());
 
-        subscriptionRepo.deleteById(id);
+        subscriptionRepo.deleteById(sub.getId());
         return "Subscription dengan id: " + id + " berhasil dihapus!";
     }
 

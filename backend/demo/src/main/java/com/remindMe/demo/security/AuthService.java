@@ -7,6 +7,6 @@ import com.remindMe.demo.User.dto.registerRequest;
 public interface AuthService {
     public boolean register(registerRequest request);
     public loginResponse login(loginRequest request);
-    public void logout();
+    public String logout();
     public boolean validateToken(String token);
 } 

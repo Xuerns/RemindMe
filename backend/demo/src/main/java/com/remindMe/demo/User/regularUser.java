@@ -17,8 +17,4 @@ public class regularUser extends userEntity {
         return 5; // Ini belum tau berapa sih batasan untuk user reguler
     }
 
-    @Override
-    public boolean canExportReport() {
-        return false; // Ini fitur masih 50 / 50, kalau keburu mungkin bisa kita implementasiin
-    }
 }
